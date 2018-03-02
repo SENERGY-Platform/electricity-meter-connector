@@ -18,10 +18,10 @@ logger = root_logger.getChild(__name__)
 
 class SerialManager(SimpleSingleton, Thread):
     __id_prefix = "83e20c8f-5448-49ac-ab55-974763971d28"
+    __port_controller_map = dict()
 
     def __init__(self):
         super().__init__()
-        self.__port_controller_map = dict()
         logger.debug("starting initial device scan")
         self._monitorPorts()
 
@@ -47,7 +47,7 @@ class SerialManager(SimpleSingleton, Thread):
                 return id.decode().replace('\n', '').replace('\r', '')
         except (serial.SerialException, serial.SerialTimeoutException) as ex:
             logger.error(ex)
-            logger.error("could not get device ID on '{}'".format(serial_con.port))
+            logger.error("could not get ID for device on '{}'".format(serial_con.port))
 
     def _diff(self, known, unknown):
         known_set = set(known)
@@ -58,7 +58,7 @@ class SerialManager(SimpleSingleton, Thread):
 
     def _monitorPorts(self):
         ports = [val.device for val in serial.tools.list_ports.grep("usb")]
-        new_p, missing_p = self._diff(self.__port_controller_map, ports)
+        new_p, missing_p = self._diff(__class__.__port_controller_map, ports)
         if new_p:
             for port in new_p:
                 serial_con = self._getSerialCon(port)
@@ -66,7 +66,7 @@ class SerialManager(SimpleSingleton, Thread):
                     device_id = self._getDeviceID(serial_con)
                     if device_id:
                         logger.info("connected to device '{}' on '{}'".format(device_id, port))
-                        self.__port_controller_map[port] = (device_id, DeviceController(serial_con, device_id))
+                        __class__.__port_controller_map[port] = (device_id, DeviceController(serial_con, device_id, __class__.delDevice))
                         sensor_device = Device("{}-{}".format(device_id, __class__.__id_prefix), "TYPE!!!!!!!!!", "Ferraris Sensor ({})".format(device_id))
                         sensor_device.addTag("type1", "Ferraris Meter")
                         sensor_device.addTag("type2", "Optical Sensor")
@@ -76,28 +76,31 @@ class SerialManager(SimpleSingleton, Thread):
                             DevicePool.add(sensor_device)
         if missing_p:
             for port in missing_p:
-                logger.info("device '{}' disconnected".format(self.__port_controller_map[port][0]))
+                logger.info("device '{}' disconnected".format(__class__.__port_controller_map[port][0]))
                 self.delDevice(port)
 
-    def getController(self, device_id) -> DeviceController:
-        for d_id, controller in self.__port_controller_map.values():
+    @staticmethod
+    def getController(device_id) -> DeviceController:
+        for d_id, controller in __class__.__port_controller_map.values():
             if device_id == d_id:
                 return controller
 
-    def getDevices(self) -> list:
+    @staticmethod
+    def getDevices() -> list:
         try:
-            return [val[0] for val in self.__port_controller_map.values()]
+            return [val[0] for val in __class__.__port_controller_map.values()]
         except IndexError:
             pass
         return list()
 
-    def delDevice(self, port):
+    @staticmethod
+    def delDevice(port):
         try:
-            Client.delete("{}-{}".format(self.__port_controller_map[port][0], __class__.__id_prefix))
+            Client.delete("{}-{}".format(__class__.__port_controller_map[port][0], __class__.__id_prefix))
         except AttributeError:
-            DevicePool.remove("{}-{}".format(self.__port_controller_map[port][0], __class__.__id_prefix))
-        if port in self.__port_controller_map:
-            del self.__port_controller_map[port]
+            DevicePool.remove("{}-{}".format(__class__.__port_controller_map[port][0], __class__.__id_prefix))
+        if port in __class__.__port_controller_map:
+            del __class__.__port_controller_map[port]
 
     def run(self):
         logger.debug("starting monitor routine")
