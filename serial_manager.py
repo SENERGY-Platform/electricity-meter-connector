@@ -5,6 +5,7 @@ try:
     from modules.device_pool import DevicePool
     from connector.device import Device
     from device_controller import DeviceController
+    from conf_manager import ID_PREFIX
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 import serial
@@ -17,7 +18,6 @@ logger = root_logger.getChild(__name__)
 
 
 class SerialManager(SimpleSingleton, Thread):
-    __id_prefix = "83e20c8f-5448-49ac-ab55-974763971d28"
     __port_controller_map = dict()
 
     def __init__(self):
@@ -67,7 +67,7 @@ class SerialManager(SimpleSingleton, Thread):
                     if device_id:
                         logger.info("connected to device '{}' on '{}'".format(device_id, port))
                         __class__.__port_controller_map[port] = (device_id, DeviceController(serial_con, device_id, __class__.delDevice))
-                        sensor_device = Device("{}-{}".format(device_id, __class__.__id_prefix), "TYPE!!!!!!!!!", "Ferraris Sensor ({})".format(device_id))
+                        sensor_device = Device("{}-{}".format(device_id, ID_PREFIX), "TYPE!!!!!!!!!", "Ferraris Sensor ({})".format(device_id))
                         sensor_device.addTag("type1", "Ferraris Meter")
                         sensor_device.addTag("type2", "Optical Sensor")
                         try:
@@ -96,9 +96,9 @@ class SerialManager(SimpleSingleton, Thread):
     @staticmethod
     def delDevice(port):
         try:
-            Client.delete("{}-{}".format(__class__.__port_controller_map[port][0], __class__.__id_prefix))
+            Client.delete("{}-{}".format(__class__.__port_controller_map[port][0], ID_PREFIX))
         except AttributeError:
-            DevicePool.remove("{}-{}".format(__class__.__port_controller_map[port][0], __class__.__id_prefix))
+            DevicePool.remove("{}-{}".format(__class__.__port_controller_map[port][0], ID_PREFIX))
         if port in __class__.__port_controller_map:
             del __class__.__port_controller_map[port]
 
