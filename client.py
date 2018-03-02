@@ -17,13 +17,24 @@ from threading import Thread
 logger = root_logger.getChild(__name__)
 
 
+class SerialController(Thread):
+    def __init__(self, serial_con: serial.Serial, device_id):
+        super().__init__()
+        self.serial_con = serial_con
+        self.device_id = device_id
+        self.start()
+
+    def run(self):
+        logger.debug("started serial controller for '{}'".format(self.device_id))
+
+
 class SerialManager(Thread):
     __port_controller_map = dict()
 
     def __init__(self):
         super().__init__()
 
-    def getSerialCon(self, port):
+    def getSerialCon(self, port) -> serial.Serial:
         try:
             logger.debug("trying to open '{}'".format(port))
             serial_con = serial.Serial(port, timeout=15)
@@ -36,9 +47,8 @@ class SerialManager(Thread):
                 logger.warning("no greeting from device on '{}'".format(port))
         except serial.SerialException:
             logger.warning("device on '{}' busy or has errors".format(port))
-        return None
 
-    def getDeviceID(self, serial_con: serial.Serial):
+    def getDeviceID(self, serial_con: serial.Serial) -> str:
         try:
             serial_con.write(b'ID\n')
             id = serial_con.readline()
@@ -47,21 +57,18 @@ class SerialManager(Thread):
         except (serial.SerialException, serial.SerialTimeoutException) as ex:
             logger.error(ex)
             logger.error("could not get device ID on '{}'".format(serial_con.port))
-        return None
 
-    def getController(self, device_id):
+    def getController(self, device_id) -> SerialController:
         for d_id, controller in __class__.__port_controller_map.values():
             if device_id == d_id:
                 return controller
-        return None
 
-    def getDevices(self):
+    def getDevices(self) -> list:
         try:
             return [val[0] for val in __class__.__port_controller_map.values()]
         except IndexError:
             pass
         return list()
-
 
     def delController(self, port):
         pass
@@ -77,18 +84,6 @@ class SerialManager(Thread):
                             logger.info("found device '{}' on '{}'".format(device_id, p_info.device))
                             __class__.__port_controller_map[p_info.device] = (device_id, SerialController(serial_con, device_id))
             sleep(5)
-
-
-class SerialController(Thread):
-    def __init__(self, serial_con: serial.Serial, device_id):
-        super().__init__()
-        self.serial_con = serial_con
-        self.device_id = device_id
-        self.start()
-
-    def run(self):
-        logger.debug("started serial controller for '{}'".format(self.device_id))
-
 
 
 test = SerialManager()
