@@ -7,6 +7,7 @@ except ImportError as ex:
 from serial import SerialException, SerialTimeoutException
 from threading import Thread
 from queue import Queue, Empty
+import functools
 
 
 logger = root_logger.getChild(__name__)
@@ -32,7 +33,23 @@ class DeviceController(Thread):
             logger.error(ex)
         return None
 
+    def loadConf(self):
+        conf = readDeviceConf(self.device_id)
+        if not conf:
+            logger.warning("no configuration found for device '{}' - using standard values".format(self.device_id))
+            return self._configureDevice(4000, 100, 20, True)
+        else:
+            logger.info("loaded configuration for device '{}'".format(self.device_id))
+            return self._configureDevice(conf[0], conf[1], conf[2], True)
+
+    def closeConnection(self):
+        self.serial_con.close()
+        self.callbk(self.serial_con.port)
+
     def configureDevice(self, nat, dt, lld):
+        self.commands.put(functools.partial(self._configureDevice, nat, dt, lld))
+
+    def _configureDevice(self, nat, dt, lld, init=False):
         writeDeviceConf(self.device_id, nat, dt, lld)
         try:
             self.serial_con.write(b'CONF\n')
@@ -49,38 +66,63 @@ class DeviceController(Thread):
                 logger.error("device '{}' did not enter configuration mode".format(self.device_id))
         except (SerialException, SerialTimeoutException) as ex:
             logger.error(ex)
-        return False
-
-    def loadConf(self):
-        conf = readDeviceConf(self.device_id)
-        if not conf:
-            logger.warning("no configuration found for device '{}' - using standard values".format(self.device_id))
-            return self.configureDevice(4000, 100, 20)
+        if init:
+            return False
         else:
-            logger.info("loaded configuration for device '{}'".format(self.device_id))
-            return self.configureDevice(conf[0], conf[1], conf[2])
-
-    def closeConnection(self):
-        self.serial_con.close()
-        self.callbk(self.serial_con.port)
+            raise __class__.Interrupt
 
     def manualRead(self):
         self.commands.put(self._manualRead)
 
     def _manualRead(self):
-        pass
+        try:
+            self.serial_con.write(b'MR\n')
+            while True:
+                msg = self.serial_con.readline()
+                try:
+                    command = self.commands.get_nowait()
+                    if command == self._stopAction:
+                        if self._stopAction():
+                            return True
+                        else:
+                            break
+                except Empty:
+                    pass
+        except (SerialException, SerialTimeoutException) as ex:
+            logger.error(ex)
+        raise __class__.Interrupt
 
     def stopAction(self):
         self.commands.put(self._stopAction)
 
     def _stopAction(self):
-        pass
+        try:
+            self.serial_con.write(b'STP\n')
+            if self._waitFor('RDY'):
+                return True
+        except SerialTimeoutException:
+            return False
 
     def startDetection(self):
         self.commands.put(self._startDetection)
 
     def _startDetection(self):
-        pass
+        try:
+            self.serial_con.write(b'STRT\n')
+            while True:
+                msg = self.serial_con.readline()
+                try:
+                    command = self.commands.get_nowait()
+                    if command == self._stopAction:
+                        if self._stopAction():
+                            return True
+                        else:
+                            break
+                except Empty:
+                    pass
+        except (SerialException, SerialTimeoutException) as ex:
+            logger.error(ex)
+        raise __class__.Interrupt
 
     def haltController(self):
         self.commands.put(self._haltController)
