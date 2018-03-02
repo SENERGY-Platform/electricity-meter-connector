@@ -25,14 +25,17 @@ class SerialManager(Thread):
 
     def getSerialCon(self, port):
         try:
+            logger.debug("trying to open '{}'".format(port))
             serial_con = serial.Serial(port, timeout=15)
-            msg = serial_con.readline()
-            if 'RDY' in msg.decode():
+            rdy_msg = serial_con.readline()
+            if 'RDY' in rdy_msg.decode():
+                logger.debug("device on '{}' ready".format(port))
                 return serial_con
             else:
-                logger.debug("no greeting from device on '{}'".format(port))
+                serial_con.close()
+                logger.warning("no greeting from device on '{}'".format(port))
         except serial.SerialException:
-            logger.debug("device on '{}' busy or has errors".format(port))
+            logger.warning("device on '{}' busy or has errors".format(port))
         return None
 
     def getDeviceID(self, serial_con: serial.Serial):
@@ -46,31 +49,50 @@ class SerialManager(Thread):
             logger.error("could not get device ID on '{}'".format(serial_con.port))
         return None
 
+    def getController(self, device_id):
+        for d_id, controller in __class__.__port_controller_map.values():
+            if device_id == d_id:
+                return controller
+        return None
+
+    def getDevices(self):
+        try:
+            return [val[0] for val in __class__.__port_controller_map.values()]
+        except IndexError:
+            pass
+        return list()
+
+
     def delController(self, port):
         pass
 
     def run(self):
         while True:
-            for serial_port in sorted(serial.tools.list_ports.grep("usb")):
-                serial_con = self.getSerialCon(serial_port.device)
-                if serial_con:
-                    id = self.getDeviceID(serial_con)
-                    if id:
-                        if id not in __class__.__port_controller_map:
-                            __class__.__port_controller_map[id] = SerialController(serial_con)
-                            logger.info("found device '{}'".format(id))
+            for p_info in serial.tools.list_ports.grep("usb"):
+                if p_info.device not in __class__.__port_controller_map:
+                    serial_con = self.getSerialCon(p_info.device)
+                    if serial_con:
+                        device_id = self.getDeviceID(serial_con)
+                        if device_id:
+                            logger.info("found device '{}' on '{}'".format(device_id, p_info.device))
+                            __class__.__port_controller_map[p_info.device] = (device_id, SerialController(serial_con, device_id))
             sleep(5)
 
 
 class SerialController(Thread):
-    def __init__(self, serial_con: serial.Serial):
+    def __init__(self, serial_con: serial.Serial, device_id):
         super().__init__()
         self.serial_con = serial_con
+        self.device_id = device_id
+        self.start()
 
     def run(self):
-        pass
+        logger.debug("started serial controller for '{}'".format(self.device_id))
 
 
 
 test = SerialManager()
 test.start()
+sleep(20)
+logger.info(test.getController("AFGH"))
+logger.info(test.getDevices())
