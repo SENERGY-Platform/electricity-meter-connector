@@ -7,9 +7,9 @@ try:
     from modules.logger import root_logger
     from connector.client import Client
     from serial_manager import SerialManager
+    from modules.device_pool import DevicePool
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
-from time import sleep
 
 
 logger = root_logger.getChild(__name__)
@@ -17,6 +17,3 @@ logger = root_logger.getChild(__name__)
 
 test = SerialManager()
 test.start()
-sleep(20)
-logger.info(test.getController("AFGH"))
-logger.info(test.getDevices())
