@@ -1,6 +1,9 @@
 try:
     from modules.logger import root_logger
     from modules.singleton import SimpleSingleton
+    from connector.client import Client
+    from modules.device_pool import DevicePool
+    from connector.device import Device
     from device_controller import DeviceController
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
@@ -14,6 +17,8 @@ logger = root_logger.getChild(__name__)
 
 
 class SerialManager(SimpleSingleton, Thread):
+    __id_prefix = "83e20c8f-5448-49ac-ab55-974763971d28"
+
     def __init__(self):
         super().__init__()
         self.__port_controller_map = dict()
@@ -62,6 +67,13 @@ class SerialManager(SimpleSingleton, Thread):
                     if device_id:
                         logger.info("connected to device '{}' on '{}'".format(device_id, port))
                         self.__port_controller_map[port] = (device_id, DeviceController(serial_con, device_id))
+                        sensor_device = Device("{}-{}".format(device_id, __class__.__id_prefix), "TYPE!!!!!!!!!", "Ferraris Sensor ({})".format(device_id))
+                        sensor_device.addTag("type1", "Ferraris Meter")
+                        sensor_device.addTag("type2", "Optical Sensor")
+                        try:
+                            Client.add(sensor_device)
+                        except AttributeError:
+                            DevicePool.add(sensor_device)
         if missing_p:
             for port in missing_p:
                 logger.info("device '{}' disconnected".format(self.__port_controller_map[port][0]))
@@ -80,6 +92,10 @@ class SerialManager(SimpleSingleton, Thread):
         return list()
 
     def delDevice(self, port):
+        try:
+            Client.delete("{}-{}".format(self.__port_controller_map[port][0], __class__.__id_prefix))
+        except AttributeError:
+            DevicePool.remove("{}-{}".format(self.__port_controller_map[port][0], __class__.__id_prefix))
         if port in self.__port_controller_map:
             del self.__port_controller_map[port]
 
