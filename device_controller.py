@@ -60,33 +60,51 @@ class DeviceController(Thread):
             logger.info("loaded configuration for device '{}'".format(self.device_id))
             return self.configureDevice(conf[0], conf[1], conf[2])
 
-    def manualRead(self):
-        pass
-
-    def stopAction(self):
-        pass
-
-    def startDetection(self):
-        pass
-
     def closeConnection(self):
         self.serial_con.close()
         self.callbk(self.serial_con.port)
 
+    def manualRead(self):
+        self.commands.put(self._manualRead)
+
+    def _manualRead(self):
+        pass
+
+    def stopAction(self):
+        self.commands.put(self._stopAction)
+
+    def _stopAction(self):
+        pass
+
+    def startDetection(self):
+        self.commands.put(self._startDetection)
+
+    def _startDetection(self):
+        pass
+
     def haltController(self):
-        self.halt = True
+        self.commands.put(self._haltController)
+
+    def _haltController(self):
+        raise __class__.Interrupt
 
     def run(self):
         logger.debug("starting serial controller for device '{}'".format(self.device_id))
         if self._waitFor('RDY'):
             logger.info("started serial controller for device '{}'".format(self.device_id))
             if self.loadConf():
-                while not self.halt:
+                while True:
                     try:
                         command = self.commands.get(timeout=1)
+                        command()
                     except Empty:
                         pass
+                    except __class__.Interrupt:
+                        break
         else:
             logger.error("device '{}' not ready".format(self.device_id))
         self.closeConnection()
         logger.info("serial controller for device '{}' halted".format(self.device_id))
+
+    class Interrupt(Exception):
+        pass
