@@ -18,46 +18,54 @@ logger = root_logger.getChild(__name__)
 
 
 class SerialManager(Thread):
-    device_scontroller_map = dict()
+    __port_controller_map = dict()
 
     def __init__(self):
         super().__init__()
 
     def getSerialCon(self, port):
         try:
-            serial_con = serial.Serial(port, timeout=10)
-            id = self.getDeviceID(serial_con)
-            if id:
-                return (serial_con, id)
+            serial_con = serial.Serial(port, timeout=15)
+            msg = serial_con.readline()
+            if 'RDY' in msg.decode():
+                return serial_con
+            else:
+                logger.debug("no greeting from device on '{}'".format(port))
         except serial.SerialException:
-            return False
+            logger.debug("device on '{}' busy or has errors".format(port))
+        return None
 
     def getDeviceID(self, serial_con: serial.Serial):
-        msg = serial_con.readline()
-        if 'RDY' in msg.decode():
+        try:
             serial_con.write(b'ID\n')
             id = serial_con.readline()
             if id:
                 return id.decode().replace('\n', '').replace('\r', '')
-        return False
+        except (serial.SerialException, serial.SerialTimeoutException) as ex:
+            logger.error(ex)
+            logger.error("could not get device ID on '{}'".format(serial_con.port))
+        return None
+
+    def delController(self, port):
+        pass
 
     def run(self):
         while True:
             for serial_port in sorted(serial.tools.list_ports.grep("usb")):
-
-                if id not in __class__.device_scontroller_map:
-                    __class__.device_scontroller_map[id] = SerialController(serial_port)
+                serial_con = self.getSerialCon(serial_port.device)
+                if serial_con:
+                    id = self.getDeviceID(serial_con)
+                    if id:
+                        if id not in __class__.__port_controller_map:
+                            __class__.__port_controller_map[id] = SerialController(serial_con)
+                            logger.info("found device '{}'".format(id))
             sleep(5)
 
 
 class SerialController(Thread):
-    def __init__(self, port):
+    def __init__(self, serial_con: serial.Serial):
         super().__init__()
-        self.serial_con = serial.Serial()
-        self.serial_con.port = port
-        self.serial_con.baudrate = 9600
-        self.serial_con.timeout = 1
-        logger.debug(self.serial_con)
+        self.serial_con = serial_con
 
     def run(self):
         pass
@@ -65,3 +73,4 @@ class SerialController(Thread):
 
 
 test = SerialManager()
+test.start()
