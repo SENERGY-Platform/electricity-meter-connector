@@ -13,12 +13,6 @@ import functools, os, inspect
 logger = root_logger.getChild(__name__)
 
 
-devices_path = '{}/devices'.format(os.path.realpath(os.path.abspath(os.path.split(inspect.getfile(inspect.currentframe()))[0])))
-if not os.path.exists(devices_path):
-    os.makedirs(devices_path)
-    logger.debug("created 'devices' dictionary")
-
-
 class DeviceController(Thread):
     def __init__(self, serial_con, device_id, callbk):
         super().__init__()
@@ -27,15 +21,7 @@ class DeviceController(Thread):
         self.callbk = callbk
         self.commands = Queue()
         self.halt = False
-        self.log_handler = None
-        self.log_file = "{}/{}".format(devices_path, self.device_id)
         self.start()
-
-    def writeLog(self, data):
-        if type(data) is bytes:
-            self.log_handler.write(data)
-        else:
-            self.log_handler.write(data.encode())
 
     def _waitFor(self, char, retries=5):
         try:
@@ -93,7 +79,6 @@ class DeviceController(Thread):
             self.serial_con.write(b'MR\n')
             while True:
                 msg = self.serial_con.readline()
-                self.writeLog(msg)
                 try:
                     command = self.commands.get_nowait()
                     if command == self._stopAction:
@@ -147,9 +132,6 @@ class DeviceController(Thread):
 
     def run(self):
         logger.debug("starting serial controller for device '{}'".format(self.device_id))
-        if os.path.isfile(self.log_file):
-            os.remove(self.log_file)
-        self.log_handler = open(self.log_file, "ab", buffering=0)
         if self._waitFor('RDY'):
             logger.info("started serial controller for device '{}'".format(self.device_id))
             if self.loadConf():
@@ -164,8 +146,6 @@ class DeviceController(Thread):
         else:
             logger.error("device '{}' not ready".format(self.device_id))
         self.closeConnection()
-        self.log_handler.close()
-        os.remove(self.log_file)
         logger.info("serial controller for device '{}' halted".format(self.device_id))
 
     class Interrupt(Exception):
