@@ -35,20 +35,20 @@ def updateConf(section, option, value):
 def writeDeviceConf(d_id, nat=None, dt=None, lld=None, strt=None):
     if not config.has_section(d_id):
         config[d_id] = {
-            'nat': nat,
-            'dt': dt,
-            'lld': lld,
-            'strt': 0
+            'nat': str(nat),
+            'dt': str(dt),
+            'lld': str(lld),
+            'strt': '0'
         }
     else:
         if nat:
-            config.set(section=d_id, option='nat', value=nat)
+            config.set(section=d_id, option='nat', value=str(nat))
         if dt:
-            config.set(section=d_id, option='dt', value=dt)
+            config.set(section=d_id, option='dt', value=str(dt))
         if lld:
-            config.set(section=d_id, option='lld', value=lld)
+            config.set(section=d_id, option='lld', value=str(lld))
         if strt:
-            config.set(section=d_id, option='strt', value=strt)
+            config.set(section=d_id, option='strt', value=str(strt))
     try:
         with open(conf_file_path, 'w') as conf_file:
             config.write(conf_file)
