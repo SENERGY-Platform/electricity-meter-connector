@@ -12,6 +12,7 @@ import functools
 
 logger = root_logger.getChild(__name__)
 
+OUT_QUEUE = Queue()
 
 class DeviceController(Thread):
     def __init__(self, serial_con, device_id, callbk):
@@ -80,6 +81,7 @@ class DeviceController(Thread):
             self._serial_con.write(b'MR\n')
             while True:
                 msg = self._serial_con.readline()
+                OUT_QUEUE.put(msg.decode().replace('\n', '').replace('\r', '')) ############################################
                 try:
                     command = self._commands.get_nowait()
                     if command == self._stopAction:
@@ -129,13 +131,13 @@ class DeviceController(Thread):
         self._commands.put(self._enableAutoStart)
 
     def _enableAutoStart(self):
-        writeDeviceConf(self._device_id, 1)
+        writeDeviceConf(self._device_id, strt=1)
 
     def disableAutoStart(self):
         self._commands.put(self._disableAutoStart)
 
     def _disableAutoStart(self):
-        writeDeviceConf(self._device_id, 0)
+        writeDeviceConf(self._device_id, strt=0)
 
     def haltController(self):
         self._commands.put(self._haltController)
