@@ -32,17 +32,23 @@ def updateConf(section, option, value):
             print(ex)
 
 
-def writeDeviceConf(d_id, nat, dt, lld):
+def writeDeviceConf(d_id, nat=None, dt=None, lld=None, strt=None):
     if not config.has_section(d_id):
         config[d_id] = {
             'nat': nat,
             'dt': dt,
-            'lld': lld
+            'lld': lld,
+            'strt': 0
         }
     else:
-        config.set(section=d_id, option='nat', value=nat)
-        config.set(section=d_id, option='dt', value=dt)
-        config.set(section=d_id, option='lld', value=lld)
+        if nat:
+            config.set(section=d_id, option='nat', value=nat)
+        if dt:
+            config.set(section=d_id, option='dt', value=dt)
+        if lld:
+            config.set(section=d_id, option='lld', value=lld)
+        if strt:
+            config.set(section=d_id, option='strt', value=strt)
     try:
         with open(conf_file_path, 'w') as conf_file:
             config.write(conf_file)
@@ -52,7 +58,7 @@ def writeDeviceConf(d_id, nat, dt, lld):
 
 def readDeviceConf(d_id):
     if config.has_section(d_id):
-        return (config[d_id]['nat'], config[d_id]['dt'], config[d_id]['lld'])
+        return (config[d_id]['nat'], config[d_id]['dt'], config[d_id]['lld'], config[d_id]['strt'])
     return None
 
 
