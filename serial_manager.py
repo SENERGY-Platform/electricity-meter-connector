@@ -24,6 +24,7 @@ class SerialManager(SimpleSingleton, Thread):
         super().__init__()
         logger.debug("starting initial device scan")
         self._monitorPorts()
+        self.start()
 
     def _getSerialCon(self, port) -> serial.Serial:
         try:
@@ -77,7 +78,7 @@ class SerialManager(SimpleSingleton, Thread):
         if missing_p:
             for port in missing_p:
                 logger.info("device '{}' disconnected".format(__class__.__port_controller_map[port][0]))
-                self.delDevice(port)
+                #self.delDevice(port)
 
     @staticmethod
     def getController(device_id) -> DeviceController:
