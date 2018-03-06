@@ -46,7 +46,6 @@ class WebGUI(Thread):
         devices.sort()
         controller = SerialManager.getController(d_id)
         if controller:
-            time.sleep(0.1)
             WebsocketConsole.setSource(controller.log_file)
         return render_template('gui.html', devices=devices, d_id=d_id)
 
