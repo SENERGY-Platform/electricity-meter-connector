@@ -79,7 +79,7 @@ class DeviceController(Thread):
         self._commands.put(functools.partial(self._configureDevice, nat, dt, lld))
 
     def _configureDevice(self, nat, dt, lld, init=False):
-        writeDeviceConf(self._device_id, nat, dt, lld)
+        writeDeviceConf(self._device_id, str(nat), str(dt), str(lld))
         try:
             self._serial_con.write(b'CONF\n')
             self._writeToOutput('CONF', 'C')
