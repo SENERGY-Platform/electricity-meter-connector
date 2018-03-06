@@ -20,6 +20,7 @@ if not os.path.exists(devices_path):
     os.makedirs(devices_path)
     logger.debug("created 'devices' dictionary")
 
+serial_logger = logging.getLogger()
 
 
 class DeviceController(Thread):
@@ -29,19 +30,24 @@ class DeviceController(Thread):
         self._device_id = device_id
         self._callbk = callbk
         self._commands = Queue()
-        self._serial_logger = logging.getLogger(device_id)
+        self._serial_logger = serial_logger.getChild(device_id)
+        self._serial_logger.propagate = 0
         log_file = os.path.join(os.path.dirname(__file__), '{}/{}.log'.format(devices_path, device_id))
         log_handler = logging.FileHandler(log_file)
         log_handler.setFormatter(logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%m.%d.%Y %I:%M:%S %p'))
         self._serial_logger.addHandler(log_handler)
         self.start()
 
-    def _writeToOutput(self, data):
+    def _writeToOutput(self, data, src=None):
         if type(data) is not str:
             data = data.decode()
         data = data.replace('\n', '').replace('\r', '')
-        data = "{}: {}".format(datetime.datetime.now().strftime("%m.%d.%Y %I:%M:%S %p"), data)
-        OUT_QUEUE.put(data)
+        if src == 'D':
+            self._serial_logger.info('> {}'.format(data))
+        elif src == 'C':
+            self._serial_logger.info('< {}'.format(data))
+        else:
+            self._serial_logger.info('{}'.format(data))
 
     def _waitFor(self, char, retries=5):
         try:
@@ -66,6 +72,7 @@ class DeviceController(Thread):
 
     def _closeConnection(self):
         self._serial_con.close()
+        self._writeToOutput('closed')
         self._callbk(self._serial_con.port)
 
     def configureDevice(self, nat, dt, lld):
@@ -75,12 +82,17 @@ class DeviceController(Thread):
         writeDeviceConf(self._device_id, nat, dt, lld)
         try:
             self._serial_con.write(b'CONF\n')
+            self._writeToOutput('CONF', 'C')
             if self._waitFor('NAT:DT:LLD'):
+                self._writeToOutput('NAT:DT:LLD', 'D')
                 conf = '{}:{}:{}\n'.format(nat, dt, lld)
                 self._serial_con.write(conf.encode())
+                self._writeToOutput(conf, 'C')
                 resp = self._waitFor(':')
+                self._writeToOutput(resp, 'D')
                 if self._waitFor('RDY'):
-                    logger.info("configured device {} - {}".format(self._device_id, resp.replace('\n', '').replace('\r', '')))
+                    self._writeToOutput('RDY', 'D')
+                    logger.info("configured device {}".format(self._device_id))
                     return True
                 else:
                     logger.error("device '{}' not ready".format(self._device_id))
@@ -99,9 +111,10 @@ class DeviceController(Thread):
     def _manualRead(self):
         try:
             self._serial_con.write(b'MR\n')
+            self._writeToOutput('MR', 'C')
             while True:
                 msg = self._serial_con.readline()
-                self._writeToOutput(msg)
+                self._writeToOutput(msg, 'D')
                 try:
                     command = self._commands.get_nowait()
                     if command == self._stopAction:
@@ -121,7 +134,9 @@ class DeviceController(Thread):
     def _stopAction(self):
         try:
             self._serial_con.write(b'STP\n')
+            self._writeToOutput('STP', 'C')
             if self._waitFor('RDY'):
+                self._writeToOutput('RDY', 'D')
                 return True
         except SerialTimeoutException:
             return False
@@ -132,8 +147,10 @@ class DeviceController(Thread):
     def _startDetection(self):
         try:
             self._serial_con.write(b'STRT\n')
+            self._writeToOutput('STRT', 'C')
             while True:
                 msg = self._serial_con.readline()
+                self._writeToOutput(msg, 'D')
                 try:
                     command = self._commands.get_nowait()
                     if command == self._stopAction:
