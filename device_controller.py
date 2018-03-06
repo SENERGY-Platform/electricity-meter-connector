@@ -174,7 +174,7 @@ class DeviceController(Thread):
         self._commands.put(self._disableAutoStart)
 
     def _disableAutoStart(self):
-        writeDeviceConf(self._device_id, strt=0)
+        writeDeviceConf(self._device_id, strt='0')
 
     def haltController(self):
         self._commands.put(self._haltController)
