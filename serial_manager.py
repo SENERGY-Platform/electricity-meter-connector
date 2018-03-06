@@ -77,8 +77,8 @@ class SerialManager(SimpleSingleton, Thread):
                             DevicePool.add(sensor_device)
         if missing_p:
             for port in missing_p:
-                logger.info("device '{}' disconnected".format(__class__.__port_controller_map[port][0]))
-                #self.delDevice(port)
+                logger.info("device on '{}' disconnected".format(port))
+                self.delDevice(port)
 
     @staticmethod
     def getController(device_id) -> DeviceController:
@@ -96,12 +96,14 @@ class SerialManager(SimpleSingleton, Thread):
 
     @staticmethod
     def delDevice(port):
-        try:
-            Client.delete("{}-{}".format(__class__.__port_controller_map[port][0], ID_PREFIX))
-        except AttributeError:
-            DevicePool.remove("{}-{}".format(__class__.__port_controller_map[port][0], ID_PREFIX))
         if port in __class__.__port_controller_map:
+            controller = __class__.__port_controller_map.get(port)
             del __class__.__port_controller_map[port]
+            try:
+                Client.delete("{}-{}".format(controller[0], ID_PREFIX))
+            except AttributeError:
+                DevicePool.remove("{}-{}".format(controller[0], ID_PREFIX))
+            controller[1].haltController()
 
     def run(self):
         logger.debug("starting monitor routine")
