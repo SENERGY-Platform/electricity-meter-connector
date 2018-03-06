@@ -4,17 +4,18 @@ try:
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 
-from queue import Empty
 from threading import Thread
-import concurrent.futures, functools, asyncio, subprocess, select
+import asyncio, time
+from asyncio.subprocess import PIPE, STDOUT
 
 logger = root_logger.getChild(__name__)
 
 class WebsocketConsole(Thread):
     _source = None
 
-    def __init__(self):
+    def __init__(self, main_loop):
         super().__init__()
+        self._main_loop = main_loop
         self.start()
 
     @staticmethod
@@ -23,34 +24,27 @@ class WebsocketConsole(Thread):
 
     async def send(self, websocket, path):
         while True:
-            logger.info("outer w")
             if __class__._source:
-                tail_process = subprocess.Popen(['tail', '-F', __class__._source], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                poll_obj = select.poll()
-                poll_obj.register(tail_process.stdout)
-                def readTail():
-                    logger.info(poll_obj.poll(0))
-                    if poll_obj.poll(1):
-                        line = tail_process.stdout.readline().decode()
-                        return line.replace('\n', '').replace('\r', '')
-                    else:
-                        tail_process.kill()
-                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                    while True:
-                        logger.info("inner w")
-                        payload = await self._event_loop.run_in_executor(
-                            executor,
-                            readTail
-                        )
-                        logger.info(payload)
-                        if payload:
+                tail_process = await asyncio.create_subprocess_exec('tail', '-F', __class__._source, stdout=PIPE, stderr=STDOUT, loop=self._event_loop)
+                while True:
+                    try:
+                        line = await asyncio.wait_for(tail_process.stdout.readline(), timeout=5, loop=self._event_loop)
+                        if line:
                             try:
-                                await websocket.send(payload)
+                                line = line.decode().replace('\n', '').replace('\r', '')
+                                await websocket.send(line)
                             except Exception as ex:
                                 logger.warning("could not send data - {}".format(ex))
                                 break
-                        else:
-                            break
+                    except asyncio.TimeoutError:
+                        pass
+                    try:
+                        await websocket.ping()
+                    except Exception as ex:
+                        logger.warning(ex)
+                        break
+                tail_process.kill()
+                await tail_process.wait()
                 break
             else:
                 try:
@@ -60,9 +54,10 @@ class WebsocketConsole(Thread):
                     logger.warning(ex)
                     break
         __class__._source = None
-        logger.info('#################')
 
     def run(self):
+        while not self._main_loop.is_running():
+            time.sleep(1)
         try:
             self._event_loop = asyncio.get_event_loop()
         except (RuntimeError, AssertionError):
