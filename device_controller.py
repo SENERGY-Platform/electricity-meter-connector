@@ -32,8 +32,8 @@ class DeviceController(Thread):
         self._commands = Queue()
         self._serial_logger = serial_logger.getChild(device_id)
         self._serial_logger.propagate = 0
-        log_file = os.path.join(os.path.dirname(__file__), '{}/{}.log'.format(devices_path, device_id))
-        log_handler = logging.FileHandler(log_file)
+        self.log_file = os.path.join(os.path.dirname(__file__), '{}/{}.log'.format(devices_path, device_id))
+        log_handler = logging.FileHandler(self.log_file)
         log_handler.setFormatter(logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%m.%d.%Y %I:%M:%S %p'))
         self._serial_logger.addHandler(log_handler)
         self.start()
@@ -47,7 +47,7 @@ class DeviceController(Thread):
         elif src == 'C':
             self._serial_logger.info('< {}'.format(data))
         else:
-            self._serial_logger.info('{}'.format(data))
+            self._serial_logger.info('# {}'.format(data))
 
     def _waitFor(self, char, retries=5):
         try:
@@ -72,7 +72,7 @@ class DeviceController(Thread):
 
     def _closeConnection(self):
         self._serial_con.close()
-        self._writeToOutput('closed')
+        self._writeToOutput('serial connection closed')
         self._callbk(self._serial_con.port)
 
     def configureDevice(self, nat, dt, lld):
@@ -184,7 +184,9 @@ class DeviceController(Thread):
 
     def run(self):
         logger.debug("starting serial controller for device '{}'".format(self._device_id))
+        self._writeToOutput('serial connection open')
         if self._waitFor('RDY'):
+            self._writeToOutput('RDY', 'D')
             logger.info("started serial controller for device '{}'".format(self._device_id))
             if self._loadConf():
                 while True:
