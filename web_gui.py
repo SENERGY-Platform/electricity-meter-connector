@@ -1,11 +1,12 @@
 try:
     from modules.logger import root_logger
-    from flask import Flask, render_template, Response, redirect, url_for
+    from flask import Flask, render_template, Response, request
     from serial_manager import SerialManager
     from ws_console import WebsocketConsole
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 from threading import Thread
+import time
 
 logger = root_logger.getChild(__name__)
 
@@ -35,14 +36,17 @@ class WebGUI(Thread):
     @app.route('/')
     def index():
         devices = SerialManager.getDevices()
+        devices.sort()
         return render_template('gui.html', devices=devices)
 
     @staticmethod
     @app.route('/<d_id>')
     def device(d_id):
         devices = SerialManager.getDevices()
+        devices.sort()
         controller = SerialManager.getController(d_id)
         if controller:
+            time.sleep(0.1)
             WebsocketConsole.setSource(controller.log_file)
         return render_template('gui.html', devices=devices, d_id=d_id)
 
@@ -52,9 +56,6 @@ class WebGUI(Thread):
         devices = SerialManager.getDevices()
         controller = SerialManager.getController(d_id)
         if controller and d_id in devices:
-            if end_point == "conf":
-                controller.configureDevice(0,0,0)
-                return Response(status=200)
             if end_point == "mr":
                 controller.manualRead()
                 return Response(status=200)
@@ -72,64 +73,13 @@ class WebGUI(Thread):
                 return Response(status=200)
         return Response(status=500)
 
-
-
-"""
-import time
-import subprocess
-import select
-
-app = Flask(__name__)
-
-@app.route('/', methods=['GET'])
-def index():
-    def liDevices():
-        for device in SerialManager.getDevices():
-            yield '<a href="{}">{}</a></br>'.format(device, device)
-    return Response(liDevices())
-
-
-@app.route('/<d_id>', methods=['GET'])
-def device(d_id):
-    functions = '' \
-                '<a href="{0}/conf">configure</a></br>' \
-                '<a href="{0}/mr">manual read</a></br>' \
-                '<a href="{0}/strt">start detection</a></br>' \
-                '<a href="{0}/stp">stop action</a></br>'.format(d_id)
-    return Response(functions)
-
-
-@app.route('/<d_id>/<func>', methods=['GET'])
-def function(d_id, func):
-    controller = SerialManager.getController(d_id)
-    if controller:
-        if func == "mr":
-            controller.manualRead()
+    @staticmethod
+    @app.route('/<d_id>/conf', methods=['POST'])
+    def conf(d_id):
+        devices = SerialManager.getDevices()
+        controller = SerialManager.getController(d_id)
+        nat, dt, lld = request.form['nat'], request.form['dt'], request.form['lld']
+        if controller and d_id in devices:
+            controller.configureDevice(nat, dt, lld)
             return Response(status=200)
-        if func == "stp":
-            controller.stopAction()
-            return Response(status=200)
-    else:
-        return Response(status=404)
-
-@app.route('/monitor/ABCH')
-def monitor():
-    def test():
-        controller = SerialManager.getController('ABCH')
-        f = subprocess.Popen(['tail', '-F', controller.log_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        p = select.poll()
-        p.register(f.stdout)
-        while True:
-            print("in while")
-            if p.poll(1):
-                yield "data: {}\n\n".format(f.stdout.readline())
-            time.sleep(0.1)
-    return Response(test(), mimetype="text/event-stream")
-
-@app.route('/test')
-def test():
-    return redirect(url_for('static', filename='index.html'))
-
-app.run(host='localhost', port=23423)
-
-"""
+        return Response(status=500)
