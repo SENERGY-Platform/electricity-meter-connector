@@ -25,7 +25,9 @@ class WebsocketConsole(Thread):
     async def send(self, websocket, path):
         while True:
             if __class__._source:
-                tail_process = await asyncio.create_subprocess_exec('tail', '-F', __class__._source, stdout=PIPE, stderr=STDOUT, loop=self._event_loop)
+                file_to_tail = __class__._source
+                __class__._source = None
+                tail_process = await asyncio.create_subprocess_exec('tail', '-F', file_to_tail, stdout=PIPE, stderr=STDOUT, loop=self._event_loop)
                 while True:
                     try:
                         line = await asyncio.wait_for(tail_process.stdout.readline(), timeout=1, loop=self._event_loop)
@@ -53,7 +55,6 @@ class WebsocketConsole(Thread):
                 except Exception as ex:
                     logger.warning(ex)
                     break
-        __class__._source = None
 
     def run(self):
         while not self._main_loop.is_running():
