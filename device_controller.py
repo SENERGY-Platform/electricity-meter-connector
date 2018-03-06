@@ -192,7 +192,8 @@ class DeviceController(Thread):
                 while True:
                     try:
                         command = self._commands.get(timeout=1)
-                        command()
+                        if command != self._stopAction:
+                            command()
                     except Empty:
                         pass
                     except __class__.Interrupt:
