@@ -7,7 +7,7 @@ except ImportError as ex:
 from serial import SerialException, SerialTimeoutException
 from threading import Thread
 from queue import Queue, Empty
-import functools
+import functools, datetime
 
 
 logger = root_logger.getChild(__name__)
@@ -22,6 +22,13 @@ class DeviceController(Thread):
         self._callbk = callbk
         self._commands = Queue()
         self.start()
+
+    def _writeToConsole(self, data):
+        if type(data) is not str:
+            data = data.decode()
+        data = data.replace('\n', '').replace('\r', '')
+        data = "{}: {}".format(datetime.datetime.now().strftime("%m.%d.%Y %I:%M:%S %p"), data)
+        OUT_QUEUE.put(data)
 
     def _waitFor(self, char, retries=5):
         try:
@@ -44,7 +51,7 @@ class DeviceController(Thread):
                 self.startDetection()
             return self._configureDevice(conf[0], conf[1], conf[2], True)
 
-    def closeConnection(self):
+    def _closeConnection(self):
         self._serial_con.close()
         self._callbk(self._serial_con.port)
 
@@ -81,7 +88,7 @@ class DeviceController(Thread):
             self._serial_con.write(b'MR\n')
             while True:
                 msg = self._serial_con.readline()
-                OUT_QUEUE.put(msg.decode().replace('\n', '').replace('\r', '')) ############################################
+                self._writeToConsole(msg)
                 try:
                     command = self._commands.get_nowait()
                     if command == self._stopAction:
@@ -160,7 +167,7 @@ class DeviceController(Thread):
                         break
         else:
             logger.error("device '{}' not ready".format(self._device_id))
-        self.closeConnection()
+        self._closeConnection()
         logger.info("serial controller for device '{}' halted".format(self._device_id))
 
     class Interrupt(Exception):
