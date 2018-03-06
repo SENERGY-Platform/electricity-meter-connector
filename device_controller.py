@@ -7,12 +7,10 @@ except ImportError as ex:
 from serial import SerialException, SerialTimeoutException
 from threading import Thread
 from queue import Queue, Empty
-import logging, functools, datetime, os, inspect
+import logging, functools, os, inspect
 
 
 logger = root_logger.getChild(__name__)
-
-OUT_QUEUE = Queue()
 
 
 devices_path = '{}/devices'.format(os.path.realpath(os.path.abspath(os.path.split(inspect.getfile(inspect.currentframe()))[0])))
@@ -20,7 +18,9 @@ if not os.path.exists(devices_path):
     os.makedirs(devices_path)
     logger.debug("created 'devices' dictionary")
 
-serial_logger = logging.getLogger()
+
+serial_logger = logging.getLogger("serial_logger")
+serial_logger.propagate = 0
 
 
 class DeviceController(Thread):
@@ -31,11 +31,11 @@ class DeviceController(Thread):
         self._callbk = callbk
         self._commands = Queue()
         self._serial_logger = serial_logger.getChild(device_id)
-        self._serial_logger.propagate = 0
-        self.log_file = os.path.join(os.path.dirname(__file__), '{}/{}.log'.format(devices_path, device_id))
-        log_handler = logging.FileHandler(self.log_file)
-        log_handler.setFormatter(logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%m.%d.%Y %I:%M:%S %p'))
-        self._serial_logger.addHandler(log_handler)
+        if not self._serial_logger.hasHandlers():
+            self.log_file = os.path.join(os.path.dirname(__file__), '{}/{}.log'.format(devices_path, device_id))
+            log_handler = logging.FileHandler(self.log_file)
+            log_handler.setFormatter(logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%m.%d.%Y %I:%M:%S %p'))
+            self._serial_logger.addHandler(log_handler)
         self.start()
 
     def _writeToOutput(self, data, src=None):
@@ -201,7 +201,7 @@ class DeviceController(Thread):
         else:
             logger.error("device '{}' not ready".format(self._device_id))
         self._closeConnection()
-        logger.info("serial controller for device '{}' halted".format(self._device_id))
+        logger.info("serial controller for device '{}' exited".format(self._device_id))
 
     class Interrupt(Exception):
         pass
