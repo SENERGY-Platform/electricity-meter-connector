@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
 	<meta charset="utf-8" />
@@ -6,30 +6,55 @@
 	<meta name="keywords" content="" />
 	<meta name="description" content="" />
 	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+	<script>
+		function httpPost(uri) {
+		    var xhttp = new XMLHttpRequest();
+			xhttp.open("POST", uri, true);
+			xhttp.send();
+		}
+	</script>
+	{% if d_id %}
+	<script>
+		var ws = new WebSocket("ws://127.0.0.1:5678/");
+		ws.onmessage = function (event) {
+			var content = document.createTextNode(event.data);
+			document.getElementById('content').innerHTML += event.data + '<br>';
+			document.getElementById('content').scrollTop = document.getElementById('content').scrollHeight
+		};
+    </script>
+	{% endif %}
 </head>
 
 <body>
-
 <div class="wrapper">
 
 	<header class="header">
-		{% if d_id %}
-        {{ d_id }}
-        {% else %}
-        No Arduino selected
-        {% endif %}
+		<div class="main-navigation">
+			{% for device in devices %}
+			<button class="btn" type="button" onclick="location.href=('{{ device }}');">{{ device }}</button>
+			{% endfor %}
+		</div>
     </header><!-- .header-->
 
 	<div class="middle">
 
 		<div class="container">
-			<main class="content">
-				<strong>Content:</strong> Sed placerat accumsan ligula. Aliquam felis magna, congue quis, tempus eu, aliquam vitae, ante. Cras neque justo, ultrices at, rhoncus a, facilisis eget, nisl. Quisque vitae pede. Nam et augue. Sed a elit. Ut vel massa. Suspendisse nibh pede, ultrices vitae, ultrices nec, mollis non, nibh. In sit amet pede quis leo vulputate hendrerit. Cras laoreet leo et justo auctor condimentum. Integer id enim. Suspendisse egestas, dui ac egestas mollis, libero orci hendrerit lacus, et malesuada lorem neque ac libero. Morbi tempor pulvinar pede. Donec vel elit.
+			<main id="content" class="content">
+
 			</main><!-- .content -->
 		</div><!-- .container-->
 
 		<aside class="left-sidebar">
-			<strong>Left Sidebar:</strong> Integer velit. Vestibulum nisi nunc, accumsan ut, vehicula sit amet, porta a, mi. Nam nisl tellus, placerat eget, posuere eget, egestas eget, dui. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. In elementum urna a eros. Integer iaculis. Maecenas vel elit.
+			<div class="sub-navigation">
+				{% if d_id %}
+				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/conf')">Configure</button>
+				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/mr')">Manual Read</button>
+				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/strt')">Start Detection</button>
+				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/stp')">Stop Current Action</button>
+				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/eas')">Enable Auto Start</button>
+				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/das')">Disable Auto Start</button>
+				{% endif %}
+			</div>
 		</aside><!-- .left-sidebar -->
 
 	</div><!-- .middle-->
@@ -37,7 +62,7 @@
 </div><!-- .wrapper -->
 
 <footer class="footer">
-	<strong>Footer:</strong> Mus elit Morbi mus enim lacus at quis Nam eget morbi. Et semper urna urna non at cursus dolor vestibulum neque enim. Tellus interdum at laoreet laoreet lacinia lacinia sed Quisque justo quis. Hendrerit scelerisque lorem elit orci tempor tincidunt enim Phasellus dignissim tincidunt. Nunc vel et Sed nisl Vestibulum odio montes Aliquam volutpat pellentesque. Ut pede sagittis et quis nunc gravida porttitor ligula.
+	<img id="logo" src="{{ url_for('static', filename='logo.svg') }}">
 </footer><!-- .footer -->
 
 </body>

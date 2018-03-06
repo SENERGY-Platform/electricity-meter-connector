@@ -66,8 +66,8 @@ body {
 /* Header
 -----------------------------------------------------------------------------*/
 .header {
-	height: 150px;
-	background: #FFE680;
+	padding: 10px;
+	background: #eeeeee;
 }
 
 
@@ -89,7 +89,10 @@ body {
 	overflow: hidden;
 }
 .content {
-	padding: 0 0 0 270px;
+	padding: 0 0 0 250px;
+	margin-top: 15px;
+	overflow-y: scroll;
+	max-height: 450px;
 }
 
 
@@ -97,10 +100,11 @@ body {
 -----------------------------------------------------------------------------*/
 .left-sidebar {
 	float: left;
-	width: 250px;
+	width: 230px;
 	margin-left: -100%;
 	position: relative;
-	background: #B5E3FF;
+	padding-left: 10px;
+    padding-top: 10px;
 }
 
 
@@ -110,6 +114,29 @@ body {
 	margin: -100px auto 0;
 	min-width: 1000px;
 	height: 100px;
-	background: #BFF08E;
+	background: #eeeeee;
 	position: relative;
+	align-items: center;
+}
+
+
+.btn {
+	background-color: #ddd;
+	width: 220px;
+	border: none;
+	color: black;
+	padding: 16px 32px;
+	text-align: center;
+	font-size: 16px;
+	margin: 4px 2px;
+	transition: 0.3s;
+}
+
+.btn:hover {
+	background-color: #3e8e41;
+	color: white;
+}
+
+#logo {
+	height: 70px;
 }
