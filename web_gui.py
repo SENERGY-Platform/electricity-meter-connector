@@ -2,6 +2,7 @@ try:
     from modules.logger import root_logger
     from flask import Flask, render_template, Response, redirect, url_for
     from serial_manager import SerialManager
+    from ws_console import WebsocketConsole
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 from threading import Thread
@@ -33,7 +34,45 @@ class WebGUI(Thread):
     @staticmethod
     @app.route('/')
     def index():
-        return render_template('index.html')
+        devices = SerialManager.getDevices()
+        return render_template('gui.html', devices=devices)
+
+    @staticmethod
+    @app.route('/<d_id>')
+    def device(d_id):
+        devices = SerialManager.getDevices()
+        controller = SerialManager.getController(d_id)
+        if controller:
+            WebsocketConsole.setSource(controller.log_file)
+        return render_template('gui.html', devices=devices, d_id=d_id)
+
+    @staticmethod
+    @app.route('/<d_id>/<end_point>', methods=['POST'])
+    def endpoint(d_id, end_point):
+        devices = SerialManager.getDevices()
+        controller = SerialManager.getController(d_id)
+        if controller and d_id in devices:
+            if end_point == "conf":
+                controller.configureDevice(0,0,0)
+                return Response(status=200)
+            if end_point == "mr":
+                controller.manualRead()
+                return Response(status=200)
+            if end_point == "strt":
+                controller.startDetection()
+                return Response(status=200)
+            if end_point == "stp":
+                controller.stopAction()
+                return Response(status=200)
+            if end_point == "eas":
+                controller.enableAutoStart()
+                return Response(status=200)
+            if end_point == "das":
+                controller.disableAutoStart()
+                return Response(status=200)
+        return Response(status=500)
+
+
 
 """
 import time
