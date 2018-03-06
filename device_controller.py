@@ -7,12 +7,20 @@ except ImportError as ex:
 from serial import SerialException, SerialTimeoutException
 from threading import Thread
 from queue import Queue, Empty
-import functools, datetime
+import logging, functools, datetime, os, inspect
 
 
 logger = root_logger.getChild(__name__)
 
 OUT_QUEUE = Queue()
+
+
+devices_path = '{}/devices'.format(os.path.realpath(os.path.abspath(os.path.split(inspect.getfile(inspect.currentframe()))[0])))
+if not os.path.exists(devices_path):
+    os.makedirs(devices_path)
+    logger.debug("created 'devices' dictionary")
+
+
 
 class DeviceController(Thread):
     def __init__(self, serial_con, device_id, callbk):
@@ -21,9 +29,14 @@ class DeviceController(Thread):
         self._device_id = device_id
         self._callbk = callbk
         self._commands = Queue()
+        self._serial_logger = logging.getLogger(device_id)
+        log_file = os.path.join(os.path.dirname(__file__), '{}/{}.log'.format(devices_path, device_id))
+        log_handler = logging.FileHandler(log_file)
+        log_handler.setFormatter(logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%m.%d.%Y %I:%M:%S %p'))
+        self._serial_logger.addHandler(log_handler)
         self.start()
 
-    def _writeToConsole(self, data):
+    def _writeToOutput(self, data):
         if type(data) is not str:
             data = data.decode()
         data = data.replace('\n', '').replace('\r', '')
@@ -88,7 +101,7 @@ class DeviceController(Thread):
             self._serial_con.write(b'MR\n')
             while True:
                 msg = self._serial_con.readline()
-                self._writeToConsole(msg)
+                self._writeToOutput(msg)
                 try:
                     command = self._commands.get_nowait()
                     if command == self._stopAction:
