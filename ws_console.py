@@ -28,7 +28,7 @@ class WebsocketConsole(Thread):
                 tail_process = await asyncio.create_subprocess_exec('tail', '-F', __class__._source, stdout=PIPE, stderr=STDOUT, loop=self._event_loop)
                 while True:
                     try:
-                        line = await asyncio.wait_for(tail_process.stdout.readline(), timeout=5, loop=self._event_loop)
+                        line = await asyncio.wait_for(tail_process.stdout.readline(), timeout=1, loop=self._event_loop)
                         if line:
                             try:
                                 line = line.decode().replace('\n', '').replace('\r', '')
