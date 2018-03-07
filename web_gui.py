@@ -6,10 +6,9 @@ try:
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 from threading import Thread
-import time
+
 
 logger = root_logger.getChild(__name__)
-
 
 
 class WebGUI(Thread):
@@ -48,10 +47,9 @@ class WebGUI(Thread):
     @staticmethod
     @app.route('/<d_id>/<end_point>', methods=['POST'])
     def endpoint(d_id, end_point):
-        devices = SerialManager.getDevices()
         try:
             controller = SerialManager.getController(d_id)
-            if controller and d_id in devices:
+            if controller:
                 if end_point == "mr":
                     controller.manualRead()
                     return Response(status=200)
@@ -75,29 +73,15 @@ class WebGUI(Thread):
         return Response(status=500)
 
     @staticmethod
-    @app.route('/<d_id>/conf', methods=['POST'])
+    @app.route('/<d_id>/conf', methods=['POST', 'GET'])
     def conf(d_id):
-        devices = SerialManager.getDevices()
         try:
             controller = SerialManager.getController(d_id)
-            nat, dt, lld = request.form['nat'], request.form['dt'], request.form['lld']
-            if controller and d_id in devices:
-                controller.configureDevice(nat, dt, lld)
-                return Response(status=200)
-        except Exception as ex:
-            logger.error(ex)
-        return Response(status=500)
-
-    @staticmethod
-    @app.route('/<d_id>/rot', methods=['POST'])
-    def rpkwh(d_id):
-        devices = SerialManager.getDevices()
-        try:
-            controller = SerialManager.getController(d_id)
-            rot = request.form['nat']
-            if controller and d_id in devices:
-                controller.configureDevice()
-                return Response(status=200)
+            if controller:
+                if request.method == 'POST':
+                    nat, dt, lld, ws = request.form.get('nat'), request.form.get('dt'), request.form.get('lld'), request.form.get('ws')
+                    controller.configureDevice(nat, dt, lld)
+                    return Response(status=200)
         except Exception as ex:
             logger.error(ex)
         return Response(status=500)

@@ -55,7 +55,6 @@
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/stp')">Stop Current Action</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/eas')">Enable Auto Start</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/das')">Disable Auto Start</button>
-				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/rot')">Set Rotations per kWh</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/res')">Reset</button>
 				{% endif %}
 			</div>
@@ -77,6 +76,7 @@
 		<label for="nat">New Average Threshold: </label><input id="nat" type="number" min="0" max="9000" required>
 		<label for="dt">Detection Threshold: </label><input id="dt" type="number" min="0" max="9000" required>
 		<label for="lld">Lower Limit Distance: </label><input id="lld" type="number" min="0" max="9000" required>
+		<label for="wsec">Rotations / kWh: </label><input id="wsec" type="number" min="0" max="100000" required>
 	</div>
 
 </div>
@@ -92,17 +92,29 @@
         var nat = document.getElementById("nat");
         var dt = document.getElementById("dt");
         var lld = document.getElementById("lld");
+        var wsec = document.getElementById("wsec");
         if (nat.checkValidity()) {
             if (dt.checkValidity()) {
                 if (lld.checkValidity()) {
-                    httpPostConf('{{ d_id }}/conf', nat.value, dt.value, lld.value)
-					modal.style.display = "none";
-                    nat.value = '';
-					dt.value = '';
-					lld.value = '';
-                }
-            }
-        }
+                    if (wsec.checkValidity()) {
+                        httpPostConf('{{ d_id }}/conf', nat.value, dt.value, lld.value, wsec.value)
+						modal.style.display = "none";
+						nat.value = '';
+						dt.value = '';
+						lld.value = '';
+						wsec.value = '';
+					} else {
+                        wsec.value = '';
+					}
+                } else {
+                    lld.value = '';
+				}
+            } else {
+                dt.value = '';
+			}
+        } else {
+            nat.value = '';
+		}
     }
     window.onclick = function(event) {
         if (event.target == modal) {
@@ -110,6 +122,7 @@
             nat.value = '';
 			dt.value = '';
 			lld.value = '';
+			wsec.value = '';
         }
     }
 </script>
