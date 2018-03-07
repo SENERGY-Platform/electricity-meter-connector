@@ -1,13 +1,13 @@
 try:
     from modules.logger import root_logger
     from connector.client import Client
-    from conf_manager import writeDeviceConf, readDeviceConf
+    from conf_manager import writeDeviceConf, readDeviceConf, ID_PREFIX
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 from serial import SerialException, SerialTimeoutException
 from threading import Thread
 from queue import Queue, Empty
-import logging, functools, os, inspect
+import logging, functools, os, inspect, json, datetime
 
 
 logger = root_logger.getChild(__name__)
@@ -174,24 +174,38 @@ class DeviceController(Thread):
         self._commands.put(self._startDetection)
 
     def _startDetection(self):
-        try:
-            self._serial_con.write(b'STRT\n')
-            self._writeToOutput('STRT', 'C')
-            while True:
-                msg = self._serial_con.readline()
-                self._writeToOutput(msg, 'D')
-                try:
-                    command = self._commands.get_nowait()
-                    if command == self._stopAction:
-                        if self._stopAction():
-                            return True
-                        else:
-                            break
-                except Empty:
-                    pass
-        except (SerialException, SerialTimeoutException) as ex:
-            logger.error(ex)
-        raise __class__.Interrupt
+        if int(self._rpkwh) > 0:
+            ws = 3600000 / int(self._rpkwh)
+            try:
+                self._serial_con.write(b'STRT\n')
+                self._writeToOutput('STRT', 'C')
+                while True:
+                    msg = self._serial_con.readline()
+                    Client.event(
+                        "{}-{}".format(self._device_id, ID_PREFIX),
+                        'detection',
+                        json.dumps({
+                            'value': ws,
+                            'unit': 'Ws',
+                            'time': datetime.datetime.now().isoformat()
+                        }),
+                        block=False
+                    )
+                    self._writeToOutput(msg, 'D')
+                    try:
+                        command = self._commands.get_nowait()
+                        if command == self._stopAction:
+                            if self._stopAction():
+                                return True
+                            else:
+                                break
+                    except Empty:
+                        pass
+            except (SerialException, SerialTimeoutException) as ex:
+                logger.error(ex)
+            raise __class__.Interrupt
+        else:
+            logger.warning("detection for device '{}' failed - please set rounds/kWh".format(self._device_id))
 
     def enableAutoStart(self):
         self._commands.put(self._enableAutoStart)
