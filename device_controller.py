@@ -31,8 +31,8 @@ class DeviceController(Thread):
         self._callbk = callbk
         self._commands = Queue()
         self._serial_logger = serial_logger.getChild(device_id)
+        self.log_file = os.path.join(os.path.dirname(__file__), '{}/{}.log'.format(devices_path, device_id))
         if not self._serial_logger.hasHandlers():
-            self.log_file = os.path.join(os.path.dirname(__file__), '{}/{}.log'.format(devices_path, device_id))
             log_handler = logging.FileHandler(self.log_file)
             log_handler.setFormatter(logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%m.%d.%Y %I:%M:%S %p'))
             self._serial_logger.addHandler(log_handler)
