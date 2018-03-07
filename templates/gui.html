@@ -14,11 +14,11 @@
 		}
 	</script>
 	<script>
-		function httpPostConf(uri, nat, dt, lld, wsec) {
+		function httpPostConf(uri, nat, dt, lld, rpkwh) {
 		    var xhttp = new XMLHttpRequest();
 			xhttp.open("POST", uri, true);
 			xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-			xhttp.send("nat=" + nat + "&dt=" + dt + "&lld=" + lld + "&ws=" + wsec);
+			xhttp.send("nat=" + nat + "&dt=" + dt + "&lld=" + lld + "&rpkwh=" + rpkwh);
 		}
 	</script>
 	<script>
@@ -26,7 +26,7 @@
             var nat = document.getElementById("nat");
 			var dt = document.getElementById("dt");
 			var lld = document.getElementById("lld");
-			var wsec = document.getElementById("wsec");
+			var rpkwh = document.getElementById("rpkwh");
 			var astrt = document.getElementById("astrt");
             var xhttp = new XMLHttpRequest();
             xhttp.onreadystatechange=function() {
@@ -35,7 +35,7 @@
                     nat.value = conf.nat;
                     dt.value = conf.dt;
                     lld.value = conf.lld;
-                    wsec.value = conf.rpkwh;
+                    rpkwh.value = conf.rpkwh;
                     if (conf.strt == 0){
                         astrt.checked = false;
 					} else if (conf.strt == 1) {
@@ -117,7 +117,7 @@
 		<label for="nat">New Average Threshold: </label><input id="nat" type="number" min="0" max="9000" required>
 		<label for="dt">Detection Threshold: </label><input id="dt" type="number" min="0" max="9000" required>
 		<label for="lld">Lower Limit Distance: </label><input id="lld" type="number" min="0" max="9000" required>
-		<label for="wsec">Rotations / kWh: </label><input id="wsec" type="number" min="0" max="100000" required>
+		<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="100000" required>
 	</div>
 
 </div>
@@ -135,15 +135,15 @@
         var nat = document.getElementById("nat");
         var dt = document.getElementById("dt");
         var lld = document.getElementById("lld");
-        var wsec = document.getElementById("wsec");
+        var rpkwh = document.getElementById("rpkwh");
         if (nat.checkValidity()) {
             if (dt.checkValidity()) {
                 if (lld.checkValidity()) {
-                    if (wsec.checkValidity()) {
-                        httpPostConf('{{ d_id }}/conf', nat.value, dt.value, lld.value, wsec.value)
+                    if (rpkwh.checkValidity()) {
+                        httpPostConf('{{ d_id }}/conf', nat.value, dt.value, lld.value, rpkwh.value);
 						modal.style.display = "none";
 					} else {
-                        wsec.value = '';
+                        rpkwh.value = '';
 					}
                 } else {
                     lld.value = '';
