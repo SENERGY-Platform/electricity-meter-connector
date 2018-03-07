@@ -30,9 +30,9 @@
 		<div class="main-navigation">
 			{% for device in devices %}
 			{% if device == d_id %}
-			<button class="btnactive" type="button" onclick="location.href=('{{ device }}');">{{ device }}</button>
+			<button class="btnactive" type="button" onclick="location.href=('{{ device }}');">Device {{ device }}</button>
 			{% else %}
-			<button class="btn" type="button" onclick="location.href=('{{ device }}');">{{ device }}</button>
+			<button class="btn" type="button" onclick="location.href=('{{ device }}');">Device {{ device }}</button>
 			{% endif %}
 			{% endfor %}
 		</div>
@@ -55,6 +55,7 @@
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/stp')">Stop Current Action</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/eas')">Enable Auto Start</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/das')">Disable Auto Start</button>
+				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/rot')">Set Rotations per kWh</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/res')">Reset</button>
 				{% endif %}
 			</div>
