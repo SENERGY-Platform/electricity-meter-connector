@@ -30,6 +30,15 @@ class DeviceController(Thread):
         self._device_id = device_id
         self._callbk = callbk
         self._commands = Queue()
+        if not os.path.isfile('{}/{}'.format(devices_path, device_id)):
+            file = open('{}/{}'.format(devices_path, device_id), 'w')
+            file.write(str(float(0)))
+            file.close()
+            self._kWh = float(0)
+        else:
+            file = open('{}/{}'.format(devices_path, device_id), 'r')
+            self._kWh = float(file.read())
+            file.close()
         self._serial_logger = serial_logger.getChild(device_id)
         self.log_file = os.path.join(os.path.dirname(__file__), '{}/{}.log'.format(devices_path, device_id))
         if not self._serial_logger.hasHandlers():
@@ -91,7 +100,8 @@ class DeviceController(Thread):
             'dt': self._dt,
             'lld': self._lld,
             'strt': self._strt,
-            'rpkwh': self._rpkwh
+            'rpkwh': self._rpkwh,
+            'kwh': self._kWh
         }
 
     def configureDevice(self, nat, dt, lld):
@@ -134,6 +144,18 @@ class DeviceController(Thread):
         writeDeviceConf(self._device_id, rpkwh=ws)
         self._rpkwh = ws
 
+    def setKwh(self, kwh):
+        self._commands.put(functools.partial(self._setKwh, kwh))
+
+    def _setKwh(self, kwh):
+        if type(kwh) is str:
+            kwh = kwh.replace(',', '.')
+        self._kWh = float(kwh)
+        file = open('{}/{}'.format(devices_path, self._device_id), 'w')
+        file.write(str(self._kWh))
+        file.close()
+
+
     def manualRead(self):
         self._commands.put(self._manualRead)
 
@@ -170,28 +192,36 @@ class DeviceController(Thread):
         except SerialTimeoutException:
             return False
 
+    def _calcAndWriteTotal(self, kwh):
+        self._kWh = self._kWh + kwh
+        file = open('{}/{}'.format(devices_path, self._device_id), 'w')
+        file.write(str(self._kWh))
+        file.close()
+
     def startDetection(self):
         self._commands.put(self._startDetection)
 
     def _startDetection(self):
         if int(self._rpkwh) > 0:
-            ws = 3600000 / int(self._rpkwh)
+            ws = int(3600000 / int(self._rpkwh))
+            kWh = ws / 3600000
             try:
                 self._serial_con.write(b'STRT\n')
                 self._writeToOutput('STRT', 'C')
                 while True:
                     msg = self._serial_con.readline()
+                    self._calcAndWriteTotal(kWh)
                     Client.event(
                         "{}-{}".format(self._device_id, ID_PREFIX),
                         'detection',
                         json.dumps({
-                            'value': ws,
-                            'unit': 'Ws',
+                            'value': self._kWh,
+                            'unit': 'kWh',
                             'time': datetime.datetime.now().isoformat()
                         }),
                         block=False
                     )
-                    self._writeToOutput(msg, 'D')
+                    #self._writeToOutput(msg, 'D')
                     try:
                         command = self._commands.get_nowait()
                         if command == self._stopAction:
