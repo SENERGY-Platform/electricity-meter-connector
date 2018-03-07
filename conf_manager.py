@@ -51,7 +51,7 @@ def writeDeviceConf(d_id, nat=None, dt=None, lld=None, rpkwh=None, strt=None):
         if strt:
             config.set(section=d_id, option='strt', value=str(strt))
         if rpkwh:
-            config.set(section=d_id, option='strt', value=str(rpkwh))
+            config.set(section=d_id, option='rpkwh', value=str(rpkwh))
     try:
         with open(conf_file_path, 'w') as conf_file:
             config.write(conf_file)
