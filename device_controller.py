@@ -207,17 +207,17 @@ class DeviceController(Thread):
         else:
             logger.warning("detection for device '{}' failed - please set rounds/kWh".format(self._device_id))
 
-    def enableAutoStart(self):
-        self._commands.put(self._enableAutoStart)
+    #def enableAutoStart(self):
+    #    self._commands.put(self._enableAutoStart)
 
-    def _enableAutoStart(self):
+    def enableAutoStart(self):
         writeDeviceConf(self._device_id, strt='1')
         self._strt = '1'
 
-    def disableAutoStart(self):
-        self._commands.put(self._disableAutoStart)
+    #def disableAutoStart(self):
+    #    self._commands.put(self._disableAutoStart)
 
-    def _disableAutoStart(self):
+    def disableAutoStart(self):
         writeDeviceConf(self._device_id, strt='0')
         self._strt = '0'
 
