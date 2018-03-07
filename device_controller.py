@@ -39,7 +39,7 @@ class DeviceController(Thread):
         self._nat = 0
         self._dt = 0
         self._lld = 0
-        self._strt = 0
+        self._strt = '0'
         self._rpkwh = 0
         self.start()
 
@@ -85,11 +85,23 @@ class DeviceController(Thread):
         self._writeToOutput('serial connection closed')
         self._callbk(self._serial_con.port)
 
+    def getConf(self):
+        return {
+            'nat': self._nat,
+            'dt': self._dt,
+            'lld': self._lld,
+            'strt': self._strt,
+            'rpkwh': self._rpkwh
+        }
+
     def configureDevice(self, nat, dt, lld):
         self._commands.put(functools.partial(self._configureDevice, nat, dt, lld))
 
     def _configureDevice(self, nat, dt, lld, init=False):
         writeDeviceConf(self._device_id, nat, dt, lld)
+        self._nat = nat
+        self._dt = dt
+        self._lld = lld
         try:
             self._serial_con.write(b'CONF\n')
             self._writeToOutput('CONF', 'C')
@@ -184,13 +196,15 @@ class DeviceController(Thread):
         self._commands.put(self._enableAutoStart)
 
     def _enableAutoStart(self):
-        writeDeviceConf(self._device_id, strt=1)
+        writeDeviceConf(self._device_id, strt='1')
+        self._strt = '1'
 
     def disableAutoStart(self):
         self._commands.put(self._disableAutoStart)
 
     def _disableAutoStart(self):
         writeDeviceConf(self._device_id, strt='0')
+        self._strt = '0'
 
     def haltController(self):
         self._commands.put(self._haltController)
