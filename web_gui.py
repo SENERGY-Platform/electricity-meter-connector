@@ -70,6 +70,9 @@ class WebGUI(Thread):
             if end_point == "das":
                 controller.disableAutoStart()
                 return Response(status=200)
+            if end_point == "res":
+                controller.haltController()
+                return Response(status=200)
         return Response(status=500)
 
     @staticmethod
