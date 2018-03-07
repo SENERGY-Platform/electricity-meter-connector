@@ -36,6 +36,11 @@ class DeviceController(Thread):
             log_handler = logging.FileHandler(self.log_file)
             log_handler.setFormatter(logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%m.%d.%Y %I:%M:%S %p'))
             self._serial_logger.addHandler(log_handler)
+        self._nat = 0
+        self._dt = 0
+        self._lld = 0
+        self._strt = 0
+        self._rpkwh = 0
         self.start()
 
     def _writeToOutput(self, data, src=None):
@@ -62,13 +67,18 @@ class DeviceController(Thread):
     def _loadConf(self):
         conf = readDeviceConf(self._device_id)
         if not conf:
-            logger.warning("no configuration found for device '{}' - using standard values".format(self._device_id))
-            return self._configureDevice(4000, 100, 20, True)
+            logger.warning("no configuration found for device '{}'".format(self._device_id))
+            return writeDeviceConf(self._device_id, self._nat, self._dt, self._lld, self._rpkwh, self._strt)
         else:
             logger.info("loaded configuration for device '{}'".format(self._device_id))
-            if int(conf[3]):
+            self._nat = conf[0]
+            self._dt = conf[1]
+            self._lld = conf[2]
+            self._rpkwh = conf[3]
+            self._strt = conf[4]
+            if int(self._strt):
                 self.startDetection()
-            return self._configureDevice(conf[0], conf[1], conf[2], True)
+            return self._configureDevice(self._nat, self._dt, self._lld, True)
 
     def _closeConnection(self):
         self._serial_con.close()
@@ -79,7 +89,7 @@ class DeviceController(Thread):
         self._commands.put(functools.partial(self._configureDevice, nat, dt, lld))
 
     def _configureDevice(self, nat, dt, lld, init=False):
-        writeDeviceConf(self._device_id, str(nat), str(dt), str(lld))
+        writeDeviceConf(self._device_id, nat, dt, lld)
         try:
             self._serial_con.write(b'CONF\n')
             self._writeToOutput('CONF', 'C')
@@ -104,6 +114,12 @@ class DeviceController(Thread):
             return False
         else:
             raise __class__.Interrupt
+
+    def setRotPerKwh(self, ws):
+        self._commands.put(functools.partial(self._setRotPerKwh, ws))
+
+    def _setRotPerKwh(self, ws):
+        self._rpkwh = ws
 
     def manualRead(self):
         self._commands.put(self._manualRead)
