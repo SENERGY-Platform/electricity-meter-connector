@@ -21,8 +21,11 @@ logger = root_logger.getChild(__name__)
 loop = asyncio.get_event_loop()
 cw = asyncio.get_child_watcher()
 
-SerialManager()
-WebsocketConsole(loop)
-WebGUI()
-Client(DevicePool)
-loop.run_forever()
+
+if __name__ == '__main__':
+    SerialManager()
+    WebsocketConsole(loop)
+    WebGUI()
+    connector_client = Client(device_manager=DevicePool)
+    loop.run_forever()
+
