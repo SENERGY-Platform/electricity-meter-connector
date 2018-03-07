@@ -1,6 +1,6 @@
 try:
     from modules.logger import root_logger
-    from flask import Flask, render_template, Response, request
+    from flask import Flask, render_template, Response, request, jsonify
     from serial_manager import SerialManager
     from ws_console import WebsocketConsole
 except ImportError as ex:
@@ -80,8 +80,15 @@ class WebGUI(Thread):
             if controller:
                 if request.method == 'POST':
                     nat, dt, lld, ws = request.form.get('nat'), request.form.get('dt'), request.form.get('lld'), request.form.get('ws')
+                    controller.setRotPerKwh(ws)
                     controller.configureDevice(nat, dt, lld)
                     return Response(status=200)
+                if request.method == 'GET':
+                    conf = controller.getConf()
+                    if conf:
+                        return jsonify(conf)
+                    else:
+                        return Response(status=404)
         except Exception as ex:
             logger.error(ex)
         return Response(status=500)
