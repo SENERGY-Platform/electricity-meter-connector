@@ -101,7 +101,7 @@ class DeviceController(Thread):
             'lld': self._lld,
             'strt': self._strt,
             'rpkwh': self._rpkwh,
-            'kwh': self._kWh
+            'tkwh': self._kWh
         }
 
     def configureDevice(self, nat, dt, lld):

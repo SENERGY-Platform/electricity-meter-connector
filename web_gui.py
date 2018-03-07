@@ -79,8 +79,9 @@ class WebGUI(Thread):
             controller = SerialManager.getController(d_id)
             if controller:
                 if request.method == 'POST':
-                    nat, dt, lld, rpkwh = request.form.get('nat'), request.form.get('dt'), request.form.get('lld'), request.form.get('rpkwh')
+                    nat, dt, lld, rpkwh, tkwh = request.form.get('nat'), request.form.get('dt'), request.form.get('lld'), request.form.get('rpkwh'), request.form.get('tkwh')
                     controller.setRotPerKwh(rpkwh)
+                    controller.setKwh(tkwh)
                     controller.configureDevice(nat, dt, lld)
                     return Response(status=200)
                 if request.method == 'GET':
