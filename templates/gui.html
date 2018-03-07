@@ -172,7 +172,7 @@
 
 {% if d_id %}
 <script>
-    var ws = new WebSocket("ws://127.0.0.1:5678/");
+    var ws = new WebSocket("ws://" + window.location.hostname + ":5678/");
     ws.onmessage = function (event) {
         var content = document.createTextNode(event.data);
         document.getElementById('content').innerHTML += event.data + '<br>';

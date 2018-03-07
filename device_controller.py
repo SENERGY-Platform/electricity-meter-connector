@@ -210,18 +210,20 @@ class DeviceController(Thread):
                 self._writeToOutput('STRT', 'C')
                 while True:
                     msg = self._serial_con.readline()
-                    self._calcAndWriteTotal(kWh)
-                    Client.event(
-                        "{}-{}".format(self._device_id, ID_PREFIX),
-                        'detection',
-                        json.dumps({
-                            'value': self._kWh,
-                            'unit': 'kWh',
-                            'time': datetime.datetime.now().isoformat()
-                        }),
-                        block=False
-                    )
-                    #self._writeToOutput(msg, 'D')
+                    if 'DET' in msg.decode():
+                        self._calcAndWriteTotal(kWh)
+                        Client.event(
+                            "{}-{}".format(self._device_id, ID_PREFIX),
+                            'detection',
+                            json.dumps({
+                                'value': self._kWh,
+                                'unit': 'kWh',
+                                'time': datetime.datetime.now().isoformat()
+                            }),
+                            block=False
+                        )
+                    elif msg.decode() != '':
+                        self._writeToOutput(msg, 'D')
                     try:
                         command = self._commands.get_nowait()
                         if command == self._stopAction:

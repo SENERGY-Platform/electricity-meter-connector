@@ -28,4 +28,3 @@ if __name__ == '__main__':
     WebGUI()
     connector_client = Client(device_manager=DevicePool)
     loop.run_forever()
-

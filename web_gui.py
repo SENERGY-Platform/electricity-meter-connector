@@ -16,7 +16,7 @@ class WebGUI(Thread):
 
     def __init__(self):
         super().__init__()
-        self._host = 'localhost'
+        self._host = '0.0.0.0'
         self._port = 8000
         self.start()
 
