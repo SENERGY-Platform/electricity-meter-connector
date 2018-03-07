@@ -131,6 +131,7 @@ class DeviceController(Thread):
         self._commands.put(functools.partial(self._setRotPerKwh, ws))
 
     def _setRotPerKwh(self, ws):
+        writeDeviceConf(self._device_id, rpkwh=ws)
         self._rpkwh = ws
 
     def manualRead(self):
