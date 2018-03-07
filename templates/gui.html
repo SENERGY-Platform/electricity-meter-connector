@@ -14,11 +14,47 @@
 		}
 	</script>
 	<script>
-		function httpPostConf(uri, nat, dt, lld) {
+		function httpPostConf(uri, nat, dt, lld, wsec) {
 		    var xhttp = new XMLHttpRequest();
 			xhttp.open("POST", uri, true);
 			xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-			xhttp.send("nat=" + nat + "&dt=" + dt + "&lld=" + lld);
+			xhttp.send("nat=" + nat + "&dt=" + dt + "&lld=" + lld + "&ws=" + wsec);
+		}
+	</script>
+	<script>
+        function httpGetConf(uri) {
+            var nat = document.getElementById("nat");
+			var dt = document.getElementById("dt");
+			var lld = document.getElementById("lld");
+			var wsec = document.getElementById("wsec");
+			var astrt = document.getElementById("astrt");
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange=function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var conf = JSON.parse(this.responseText);
+                    nat.value = conf.nat;
+                    dt.value = conf.dt;
+                    lld.value = conf.lld;
+                    wsec.value = conf.rpkwh;
+                    if (conf.strt == 0){
+                        astrt.checked = false;
+					} else if (conf.strt == 1) {
+                        astrt.checked = true;
+					}
+                }
+            };
+            xhttp.open("GET", uri, true);
+            xhttp.send();
+        }
+	</script>
+	<script>
+		function toggleAstrt(box) {
+			if (box.checked == true) {
+			    httpPost('{{ d_id }}/eas');
+			} else if (box.checked == false) {
+			    httpPost('{{ d_id }}/das');
+			}
+			httpGetConf('{{ d_id }}/conf');
 		}
 	</script>
 </head>
@@ -53,9 +89,14 @@
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/mr')">Manual Read</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/strt')">Start Detection</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/stp')">Stop Current Action</button>
-				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/eas')">Enable Auto Start</button>
-				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/das')">Disable Auto Start</button>
+				<!---<button class="btn" type="button" onclick="httpPost('{{ d_id }}/eas')">Enable Auto Start</button>
+				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/das')">Disable Auto Start</button>-->
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/res')">Reset</button>
+				Auto Start
+				<label class="switch">
+					<input id="astrt" type="checkbox" onclick="toggleAstrt(this)">
+					<span class="slider"></span>
+				</label>
 				{% endif %}
 			</div>
 		</aside><!-- .left-sidebar -->
@@ -82,12 +123,14 @@
 </div>
 
 <script>
+	httpGetConf('{{ d_id }}/conf');
     var modal = document.getElementById('myModal');
     var btn = document.getElementById("myBtn");
     var span = document.getElementsByClassName("close")[0];
     btn.onclick = function() {
+        httpGetConf('{{ d_id }}/conf');
         modal.style.display = "block";
-    }
+    };
     span.onclick = function() {
         var nat = document.getElementById("nat");
         var dt = document.getElementById("dt");
@@ -99,10 +142,6 @@
                     if (wsec.checkValidity()) {
                         httpPostConf('{{ d_id }}/conf', nat.value, dt.value, lld.value, wsec.value)
 						modal.style.display = "none";
-						nat.value = '';
-						dt.value = '';
-						lld.value = '';
-						wsec.value = '';
 					} else {
                         wsec.value = '';
 					}
@@ -115,14 +154,10 @@
         } else {
             nat.value = '';
 		}
-    }
+    };
     window.onclick = function(event) {
         if (event.target == modal) {
             modal.style.display = "none";
-            nat.value = '';
-			dt.value = '';
-			lld.value = '';
-			wsec.value = '';
         }
     }
 </script>
