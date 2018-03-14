@@ -239,6 +239,33 @@ class DeviceController(Thread):
         else:
             logger.warning("detection for device '{}' failed - please set rounds/kWh".format(self._device_id))
 
+    def startDebug(self):
+        self._commands.put(self._startDebug)
+
+    def _startDebug(self):
+        if int(self._rpkwh) > 0:
+            try:
+                self._serial_con.write(b'STRT\n')
+                self._writeToOutput('STRT', 'C')
+                while True:
+                    msg = self._serial_con.readline()
+                    if msg.decode() != '':
+                        self._writeToOutput(msg, 'D')
+                    try:
+                        command = self._commands.get_nowait()
+                        if command == self._stopAction:
+                            if self._stopAction():
+                                return True
+                            else:
+                                break
+                    except Empty:
+                        pass
+            except (SerialException, SerialTimeoutException) as ex:
+                logger.error(ex)
+            raise __class__.Interrupt
+        else:
+            self._writeToOutput("please configure device first")
+
     def enableAutoStart(self):
         writeDeviceConf(self._device_id, strt='1')
         self._strt = '1'
