@@ -88,7 +88,7 @@
 			<div class="sub-navigation">
 				{% if d_id %}
 				<button class="btn" type="button" id="myBtn">Configure</button>
-				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/mr')">Manual Read</button>
+				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/rs')">Read Sensor</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/dbg')">Debug Mode</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/strt')">Start Detection</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/stp')">Stop Current Action</button>

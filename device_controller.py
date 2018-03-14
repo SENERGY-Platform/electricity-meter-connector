@@ -155,11 +155,10 @@ class DeviceController(Thread):
         file.write(str(self._kWh))
         file.close()
 
+    def readSensor(self):
+        self._commands.put(self._readSensor)
 
-    def manualRead(self):
-        self._commands.put(self._manualRead)
-
-    def _manualRead(self):
+    def _readSensor(self):
         try:
             self._serial_con.write(b'MR\n')
             self._writeToOutput('MR', 'C')
