@@ -53,6 +53,9 @@ class WebGUI(Thread):
                 if end_point == "mr":
                     controller.manualRead()
                     return Response(status=200)
+                if end_point == "dbg":
+                    controller.startDebug()
+                    return Response(status=200)
                 if end_point == "strt":
                     controller.startDetection()
                     return Response(status=200)

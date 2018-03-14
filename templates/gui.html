@@ -89,10 +89,9 @@
 				{% if d_id %}
 				<button class="btn" type="button" id="myBtn">Configure</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/mr')">Manual Read</button>
+				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/dbg')">Debug Mode</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/strt')">Start Detection</button>
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/stp')">Stop Current Action</button>
-				<!---<button class="btn" type="button" onclick="httpPost('{{ d_id }}/eas')">Enable Auto Start</button>
-				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/das')">Disable Auto Start</button>-->
 				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/res')">Reset</button>
 				Auto Start
 				<label class="switch">
