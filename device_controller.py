@@ -221,8 +221,6 @@ class DeviceController(Thread):
                             }),
                             block=False
                         )
-                    elif msg.decode() != '':
-                        self._writeToOutput(msg, 'D')
                     try:
                         command = self._commands.get_nowait()
                         if command == self._stopAction:

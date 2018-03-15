@@ -66,6 +66,6 @@ class WebsocketConsole(Thread):
             self._event_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self._event_loop)
             logger.debug("created new event loop")
-        server = websockets.serve(self.send, '127.0.0.1', 5678)
+        server = websockets.serve(self.send, '0.0.0.0', 5678)
         self._event_loop.run_until_complete(server)
         self._event_loop.run_forever()
