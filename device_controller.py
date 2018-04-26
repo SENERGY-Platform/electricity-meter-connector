@@ -1,7 +1,7 @@
 try:
-    from modules.logger import root_logger
     from connector.client import Client
     from conf_manager import writeDeviceConf, readDeviceConf, ID_PREFIX
+    from logger import root_logger
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 from serial import SerialException, SerialTimeoutException

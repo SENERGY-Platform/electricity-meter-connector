@@ -1,8 +1,8 @@
 try:
-    from modules.logger import root_logger
     from flask import Flask, render_template, Response, request, jsonify
     from serial_manager import SerialManager
     from ws_console import WebsocketConsole
+    from logger import root_logger
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 from threading import Thread

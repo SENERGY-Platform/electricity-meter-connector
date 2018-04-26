@@ -4,7 +4,6 @@ if import_path not in sys.path:
     sys.path.insert(0, import_path)
 
 try:
-    from modules.logger import root_logger
     from connector.client import Client
     from serial_manager import SerialManager
     from modules.device_pool import DevicePool
@@ -13,9 +12,6 @@ try:
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 import asyncio
-
-
-logger = root_logger.getChild(__name__)
 
 
 loop = asyncio.get_event_loop()

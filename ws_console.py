@@ -1,6 +1,6 @@
 try:
     import websockets
-    from modules.logger import root_logger
+    from logger import root_logger
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 
