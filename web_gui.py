@@ -2,13 +2,17 @@ try:
     from flask import Flask, render_template, Response, request, jsonify
     from serial_manager import SerialManager
     from ws_console import WebsocketConsole
-    from logger import root_logger
+    from logger import root_logger, connector_client_log_handler
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 from threading import Thread
+import logging
 
 
 logger = root_logger.getChild(__name__)
+werkzeug_logger = logging.getLogger('werkzeug')
+werkzeug_logger.addHandler(connector_client_log_handler)
+werkzeug_logger.setLevel(logging.WARNING)
 
 
 class WebGUI(Thread):
