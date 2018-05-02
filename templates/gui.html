@@ -6,59 +6,7 @@
 	<meta name="keywords" content="" />
 	<meta name="description" content="" />
 	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
-	<script>
-		function httpPost(uri) {
-		    var xhttp = new XMLHttpRequest();
-			xhttp.open("POST", uri, true);
-			xhttp.send();
-		}
-	</script>
-	<script>
-		function httpPostConf(uri, nat, dt, lld, rpkwh, tkwh) {
-		    var xhttp = new XMLHttpRequest();
-			xhttp.open("POST", uri, true);
-			xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-			xhttp.send("nat=" + nat + "&dt=" + dt + "&lld=" + lld + "&rpkwh=" + rpkwh + "&tkwh=" + tkwh);
-		}
-	</script>
-	<script>
-        function httpGetConf(uri) {
-            var nat = document.getElementById("nat");
-			var dt = document.getElementById("dt");
-			var lld = document.getElementById("lld");
-			var rpkwh = document.getElementById("rpkwh");
-			var astrt = document.getElementById("astrt");
-			var tkwh = document.getElementById("tkwh");
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange=function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    var conf = JSON.parse(this.responseText);
-                    nat.value = conf.nat;
-                    dt.value = conf.dt;
-                    lld.value = conf.lld;
-                    rpkwh.value = conf.rpkwh;
-                    tkwh.value = conf.tkwh;
-                    if (conf.strt == 0){
-                        astrt.checked = false;
-					} else if (conf.strt == 1) {
-                        astrt.checked = true;
-					}
-                }
-            };
-            xhttp.open("GET", uri, true);
-            xhttp.send();
-        }
-	</script>
-	<script>
-		function toggleAstrt(box) {
-			if (box.checked == true) {
-			    httpPost('{{ d_id }}/eas');
-			} else if (box.checked == false) {
-			    httpPost('{{ d_id }}/das');
-			}
-			httpGetConf('{{ d_id }}/conf');
-		}
-	</script>
+	<script src="{{ url_for('static', filename='gui.js') }}"></script>
 </head>
 
 <body>
@@ -98,6 +46,7 @@
 					<input id="astrt" type="checkbox" onclick="toggleAstrt(this)">
 					<span class="slider"></span>
 				</label>
+				<script>openWS();</script>
 				{% endif %}
 			</div>
 		</aside><!-- .left-sidebar -->
@@ -168,17 +117,6 @@
         }
     }
 </script>
-
-{% if d_id %}
-<script>
-    var ws = new WebSocket("ws://" + window.location.hostname + ":5678/");
-    ws.onmessage = function (event) {
-        var content = document.createTextNode(event.data);
-        document.getElementById('content').innerHTML += event.data + '<br>';
-        document.getElementById('content').scrollTop = document.getElementById('content').scrollHeight
-    };
-</script>
-{% endif %}
 
 </body>
 </html>
