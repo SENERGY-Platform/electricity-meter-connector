@@ -235,7 +235,7 @@ class DeviceController(Thread):
                 logger.error(ex)
             raise __class__.Interrupt
         else:
-            logger.warning("detection for device '{}' failed - please set rounds/kWh".format(self._device_id))
+            logger.warning("detection for device '{}' failed - rounds/kWh not set".format(self._device_id))
 
     def startDebug(self):
         self._commands.put(self._startDebug)
