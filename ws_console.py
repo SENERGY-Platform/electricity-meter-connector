@@ -43,7 +43,8 @@ class WebsocketConsole(Thread):
                     try:
                         await websocket.ping()
                     except Exception as ex:
-                        logger.warning(ex)
+                        if not any(code in str(ex) for code in ["1000", "1001"]):
+                            logger.warning(ex)
                         break
                 tail_process.kill()
                 await tail_process.wait()
@@ -53,7 +54,8 @@ class WebsocketConsole(Thread):
                     await websocket.ping()
                     await asyncio.sleep(1)
                 except Exception as ex:
-                    logger.warning(ex)
+                    if not any(code in str(ex) for code in ["1000", "1001"]):
+                        logger.warning(ex)
                     break
 
     def run(self):
