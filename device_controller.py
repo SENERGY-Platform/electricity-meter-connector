@@ -20,7 +20,6 @@ if not os.path.exists(devices_path):
 
 
 serial_logger = logging.getLogger("serial_logger")
-serial_logger.propagate = False
 serial_logger.setLevel(logging.DEBUG)
 
 
