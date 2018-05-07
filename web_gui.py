@@ -32,7 +32,7 @@ class WebGUI(Thread):
     def index():
         devices = SerialManager.getDevices()
         devices.sort()
-        return render_template('gui.html', devices=devices, time="?v={}".format(time.time()))
+        return render_template('gui.html', devices=devices)
 
     @staticmethod
     @app.route('/<d_id>', methods=['GET'])
@@ -43,10 +43,10 @@ class WebGUI(Thread):
             controller = SerialManager.getController(d_id)
             if controller:
                 WebsocketConsole.setSource(controller.log_file)
-            return render_template('gui.html', devices=devices, d_id=d_id, time="?v={}".format(time.time()))
+                return render_template('gui.html', devices=devices, d_id=d_id)
         except Exception as ex:
             logger.error(ex)
-        return render_template('gui.html', devices=devices, time="?v={}".format(time.time()))
+        return render_template('gui.html', devices=devices)
 
     @staticmethod
     @app.route('/<d_id>/<end_point>', methods=['POST'])
