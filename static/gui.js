@@ -1,12 +1,91 @@
 "use strict";
 
-function httpPost(uri) {
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", uri, true);
-    xhttp.send();
+let conf_modal;
+let nat;
+let dt;
+let lld;
+let rpkwh;
+let astrt;
+let tkwh;
+
+window.addEventListener("DOMContentLoaded", function (e) {
+    conf_modal = document.getElementById('modal');
+    nat = document.getElementById("nat");
+    dt = document.getElementById("dt");
+    lld = document.getElementById("lld");
+    rpkwh = document.getElementById("rpkwh");
+    astrt = document.getElementById("astrt");
+    tkwh = document.getElementById("tkwh");
+});
+
+
+function httpPost(uri, header, body) {
+    if (uri && header && body) {
+        let request = new XMLHttpRequest();
+        request.open("POST", uri);
+        request.setRequestHeader(header);
+        request.timeout = 5000;
+        request.send(body);
+    }
 }
 
 
+function httpGet(uri, header) {
+    if (uri) {
+        return new Promise(function (resolve, reject) {
+            let request = new XMLHttpRequest();
+            request.open("GET", uri);
+            if (header) {
+                request.setRequestHeader(header);
+            }
+            request.timeout = 5000;
+            request.onreadystatechange = function () {
+                if (request.readyState === 4) {
+                    if (request.status === 200) {
+                        resolve(request.response);
+                    } else {
+                        reject(request.status);
+                    }
+                }
+            };
+            request.ontimeout = function () {
+                reject('timeout');
+            };
+            request.send();
+        })
+    }
+}
+
+
+function toggleAstrt(box) {
+    if (box.checked === true) {
+        //httpPost('{{ d_id }}/eas');
+    } else if (box.checked === false) {
+        //httpPost('{{ d_id }}/das');
+    }
+}
+
+async function toggleConfModal(uri) {
+    if (conf_modal.style.display === "none" || conf_modal.style.display === "") {
+        let result = await httpGet(uri).catch(function (e) {
+            console.log(e)
+        });
+        if (result !== 'timeout' && result !== undefined) {
+            let conf = JSON.parse(result);
+            nat.value = conf.nat;
+            dt.value = conf.dt;
+            lld.value = conf.lld;
+            rpkwh.value = conf.rpkwh;
+            tkwh.value = conf.tkwh;
+            conf_modal.style.display = "block";
+        }
+    } else {
+        conf_modal.style.display = "none";
+    }
+}
+
+
+/*
 function httpPostConf(uri, nat, dt, lld, rpkwh, tkwh) {
     let xhttp = new XMLHttpRequest();
     xhttp.open("POST", uri, true);
@@ -43,16 +122,6 @@ function httpGetConf(uri) {
 }
 
 
-function toggleAstrt(box) {
-    if (box.checked == true) {
-        httpPost('{{ d_id }}/eas');
-    } else if (box.checked == false) {
-        httpPost('{{ d_id }}/das');
-    }
-    httpGetConf('{{ d_id }}/conf');
-}
-
-
 function openWS() {
    let ws = new WebSocket("ws://" + window.location.hostname + ":5678/");
     ws.onmessage = function (event) {
@@ -62,4 +131,4 @@ function openWS() {
     };
     window.addEventListener('unload', function (event) { ws.close(1000); });
 }
-
+*/
