@@ -5,77 +5,73 @@
 	<title>Ferraris Arduino Serial Gateway</title>
 	<meta name="keywords" content="" />
 	<meta name="description" content="" />
-	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
-	<script src="{{ url_for('static', filename='gui.js') }}"></script>
+	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css')|autoversion }}">
+	<script src="{{ url_for('static', filename='gui.js')|autoversion }}"></script>
 </head>
 
 <body>
-<div class="wrapper">
 
-	<header class="header">
-		<div class="main-navigation">
-			{% for device in devices %}
-			{% if device == d_id %}
-			<button class="btnactive" type="button" onclick="location.href=('{{ device }}');">Device {{ device }}</button>
-			{% else %}
-			<button class="btn" type="button" onclick="location.href=('{{ device }}');">Device {{ device }}</button>
-			{% endif %}
-			{% endfor %}
-		</div>
-    </header><!-- .header-->
-
-	<div class="middle">
-
-		<div class="container">
-			<main id="content" class="content">
-
-			</main><!-- .content -->
-		</div><!-- .container-->
-
-		<aside class="left-sidebar">
-			<div class="sub-navigation">
-				{% if d_id %}
-				<button class="btn" type="button" id="myBtn">Configure</button>
-				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/rs')">Read Sensor</button>
-				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/dbg')">Debug Mode</button>
-				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/strt')">Start Detection</button>
-				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/stp')">Stop Current Action</button>
-				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/res')">Reset</button>
-				Auto Start
-				<label class="switch">
-					<input id="astrt" type="checkbox" onclick="toggleAstrt(this)">
-					<span class="slider"></span>
-				</label>
-				<script>openWS();</script>
-				{% endif %}
-			</div>
-		</aside><!-- .left-sidebar -->
-
-	</div><!-- .middle-->
-
-</div><!-- .wrapper -->
-
-<footer class="footer">
-	<img id="logo" src="{{ url_for('static', filename='logo.svg') }}">
-</footer><!-- .footer -->
-
-<div id="myModal" class="modal">
+<div id="modal" class="modal">
 
   <!-- Modal content -->
 	<div class="modal-content">
-		<span class="close">OK</span>
-		<label for="nat">New Average Threshold: </label><input id="nat" type="number" min="0" max="100000" required>
-		<label for="dt">Detection Threshold: </label><input id="dt" type="number" min="0" max="100000" required>
-		<label for="lld">Lower Limit Distance: </label><input id="lld" type="number" min="0" max="100000" required>
-		<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="100000" required>
-		<label for="tkwh">Total kWh: </label><input id="tkwh" type="text" required>
+		<form action="">
+			<label for="nat">New Average Threshold: </label><input id="nat" type="number" min="0" max="100000" required><br><br>
+			<label for="dt">Detection Threshold: </label><input id="dt" type="number" min="0" max="100000" required><br><br>
+			<label for="lld">Lower Limit Distance: </label><input id="lld" type="number" min="0" max="100000" required><br><br>
+			<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="100000" required><br><br>
+			<label for="tkwh">Total kWh: </label><input id="tkwh" type="text" required><br><br>
+			<input type="submit" value="Save"><button class="btn" type="button">Cancel</button>
+		</form>
 	</div>
 
 </div>
 
+<div class="wrapper">
+
+	<div class="header">
+		{% if d_id %}
+		{{ d_id }}
+		{% endif %}
+    </div><!-- .header-->
+
+	<div class="main-navigation">
+		{% for device in devices %}
+		{% if device == d_id %}
+		<button class="btnactive" type="button" onclick="location.href=('{{ device }}');">Device {{ device }}</button>
+		{% else %}
+		<button class="btn" type="button" onclick="location.href=('{{ device }}');">Device {{ device }}</button>
+		{% endif %}
+		{% endfor %}
+	</div>
+
+	{% if d_id %}
+	<div id="content" class="content">
+		<img id="logo" src="{{ url_for('static', filename='logo.svg') }}">
+		<div id="console"></div>
+	</div>
+
+	<div class="sub-navigation">
+		<button class="btn" type="button" id="rs_btn">Read Sensor</button>
+		<button class="btn" type="button" id="dbg_btn">Debug Mode</button>
+		<button class="btn" type="button" id="strt_btn">Start Detection</button>
+		<button class="btn" type="button" id="stp_btn">Stop Current Action</button>
+		<br><br>
+		<button class="btn" type="button" id="conf_btn">Configure</button>
+		<button class="btn" type="button" id="res_btn">Reset</button>
+		<label class="container">Autostart
+			<input type="checkbox" checked="checked" onclick="toggleAstrt(this)">
+			<span class="checkmark"></span>
+		</label>
+	</div>
+	{% endif %}
+
+</div><!-- .wrapper -->
+
 <script>
+	/*
 	httpGetConf('{{ d_id }}/conf');
-    var modal = document.getElementById('myModal');
+    var modal = document.getElementById('modal');
     var btn = document.getElementById("myBtn");
     var span = document.getElementsByClassName("close")[0];
     btn.onclick = function() {
@@ -115,7 +111,7 @@
         if (event.target == modal) {
             modal.style.display = "none";
         }
-    }
+    }*/
 </script>
 
 </body>

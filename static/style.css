@@ -60,68 +60,110 @@ body {
 	min-height: 100%;
 	height: auto !important;
 	height: 100%;
+	position: relative;
+    background: #f5f5f5;
 }
 
 
-/* Header
+/* Layout
 -----------------------------------------------------------------------------*/
+
 .header {
-	padding: 10px;
-	background: #eeeeee;
+	position: absolute;
+	top: 0;
+    left: 0;
+    right: 0;
+	padding: 15px;
+	height: 50px;
+	font-size: 36px;
+	color: black;
+    background: #efefef;
+	text-align: center;
+	line-height: 50px;
+    z-index: 4;
+    -webkit-box-shadow: 0 3px 10px 0 rgba(0,0,0,0.25);
+    box-shadow: 0 3px 10px 0 rgba(0,0,0,0.25);
 }
 
+.main-navigation {
+	position: absolute;
+	top: 80px;
+    left: 0;
+    bottom: 0;
+	width: 240px;
+    padding-left: 15px;
+	padding-top: 15px;
+	padding-bottom: 15px;
+    overflow-y: scroll;
+    z-index: 1;
+    background: #efefef;
+    -webkit-box-shadow: 3px 0 10px 0 rgba(0,0,0,0.25);
+    box-shadow: 3px 0 10px 0 rgba(0,0,0,0.25);
+}
 
-/* Middle
------------------------------------------------------------------------------*/
-.middle {
-	width: 100%;
-	padding: 0 0 100px;
-	position: relative;
-}
-.middle:after {
-	display: table;
-	clear: both;
-	content: '';
-}
-.container {
-	width: 100%;
-	float: left;
-	overflow: hidden;
-}
 .content {
-	padding: 0 0 0 250px;
-	margin-top: 15px;
-	overflow-y: scroll;
-	max-height: 450px;
+	position: absolute;
+	top: 99px;
+	left: 275px;
+	right: 255px;
+	bottom: 19px;
+    z-index: 0;
+    background: white;
 }
 
-
-/* Left Sidebar
------------------------------------------------------------------------------*/
-.left-sidebar {
-	float: left;
-	width: 230px;
-	margin-left: -100%;
-	position: relative;
-	padding-left: 10px;
-    padding-top: 10px;
+.sub-navigation {
+	position: absolute;
+	top: 80px;
+    right: 0;
+    bottom: 55px;
+	width: 238px;
+    padding-top: 15px;
+	padding-left: 15px;
+    z-index: 1;
 }
 
-
-/* Footer
------------------------------------------------------------------------------*/
 .footer {
-	margin: -100px auto 0;
-	min-width: 1000px;
-	height: 100px;
-	background: #eeeeee;
-	position: relative;
+	bottom: 0;
+	height: 45px;
+	left: 255px;
+    right: 0;
+	padding: 5px;
+	background: #3e8e41;
+	position: absolute;
 	align-items: center;
+    z-index: 0;
 }
 
+#logo {
+	max-width: 70%;
+    height: 100%;
+	margin: auto;
+	display: block;
+    position: relative;
+    z-index: 1;
+    vertical-align: middle;
+}
+
+#console {
+    position: absolute;
+    top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+    padding: 15px;
+	overflow: scroll;
+	border-style: dotted;
+	border-width: 1px;
+	font-size: 16px;
+    font-family: 'Consolas', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+    z-index: 2;
+}
+
+
+/* Buttons etc.
+-----------------------------------------------------------------------------*/
 
 .btn {
-	background-color: #ddd;
 	width: 220px;
 	border: none;
 	color: black;
@@ -130,6 +172,10 @@ body {
 	font-size: 16px;
 	margin: 4px 2px;
 	transition: 0.3s;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+    cursor: pointer;
+    background-color: white;
 }
 
 .btnactive {
@@ -142,22 +188,74 @@ body {
 	font-size: 16px;
 	margin: 4px 2px;
 	transition: 0.3s;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
 }
 
 .btn:hover {
 	background-color: #3e8e41;
 	color: white;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.5);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.5);
 }
 
-#logo {
-	height: 70px;
+input[type=number], select {
+    display: inline-block;
+    box-sizing: border-box;
+    width: 462px;
+	border: none;
+	color: black;
+	padding: 16px 32px;
+	text-align: right;
+	font-size: 16px;
+	margin: 4px 2px;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
 }
+
+input[type=text], select {
+    display: inline-block;
+    box-sizing: border-box;
+    width: 462px;
+	border: none;
+	color: black;
+	padding: 16px 32px;
+	text-align: right;
+	font-size: 16px;
+	margin: 4px 2px;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+}
+
+input[type=submit] {
+    width: 220px;
+	border: none;
+	color: black;
+	padding: 16px 32px;
+	text-align: center;
+	font-size: 16px;
+	margin: 4px 2px;
+    margin-right: 20px;
+	transition: 0.3s;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+    cursor: pointer;
+    background-color: white;
+}
+
+input[type=submit]:hover {
+    background-color: #3e8e41;
+	color: white;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.5);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.5);
+}
+
 
 
 .modal {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
+    z-index: 3; /* Sit on top */
     left: 0;
     top: 0;
     width: 100%; /* Full width */
@@ -165,15 +263,19 @@ body {
     overflow: auto; /* Enable scroll if needed */
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    transition: 0.3s;
 }
 
 /* Modal Content/Box */
 .modal-content {
-    background-color: #fefefe;
-    margin: 15% auto; /* 15% from the top and centered */
+    background-color: #efefef;
+    margin: 80px auto; /* 15% from the top and centered */
     padding: 20px;
-    border: 1px solid #888;
-    width: 80%; /* Could be more or less, depending on screen size */
+    width: 467px; /* Could be more or less, depending on screen size */
+    transition: 0.3s;
+    font-size: 16px;
+    -webkit-box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
+    box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
 }
 
 /* The Close Button */
@@ -192,52 +294,79 @@ body {
 }
 
 
-/* The switch - the box around the slider */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 34px;
+.container {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    font-size: 16px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    width: 156px;
+	border: none;
+	color: black;
+	padding: 16px 32px;
+	text-align: center;
+	margin: 4px 2px;
+	transition: 0.3s;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+    background-color: white;
 }
 
-/* Hide default HTML checkbox */
-.switch input {display:none;}
-
-/* The slider */
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ddd;
-  -webkit-transition: .4s;
-  transition: .4s;
+.container:hover {
+	background-color: #3e8e41;
+	color: white;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.5);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.5);
 }
 
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+/* Hide the browser's default checkbox */
+.container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
 }
 
-input:checked + .slider {
-  background-color: #3e8e41;
+/* Create a custom checkbox */
+.checkmark {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    height: 25px;
+    width: 25px;
 }
 
-input:focus + .slider {
-  box-shadow: 0 0 1px #3e8e41;
+/* Create the checkmark/indicator (hidden when not checked) */
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
 }
 
-input:checked + .slider:before {
-  -webkit-transform: translateX(26px);
-  -ms-transform: translateX(26px);
-  transform: translateX(26px);
+/* Show the checkmark when checked */
+.container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+/* Style the checkmark/indicator */
+.container .checkmark:after {
+    left: 9px;
+    top: 5px;
+    width: 5px;
+    height: 10px;
+    border: solid #3e8e41;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+.container:hover .checkmark:after {
+    border: solid greenyellow;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
 }

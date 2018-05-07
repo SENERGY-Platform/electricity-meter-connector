@@ -6,7 +6,7 @@ try:
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 from threading import Thread
-import logging
+import logging, time, os
 
 
 logger = root_logger.getChild(__name__)
@@ -28,14 +28,14 @@ class WebGUI(Thread):
         __class__.app.run(host=self._host, port=self._port)
 
     @staticmethod
-    @app.route('/')
+    @app.route('/', methods=['GET'])
     def index():
         devices = SerialManager.getDevices()
         devices.sort()
-        return render_template('gui.html', devices=devices)
+        return render_template('gui.html', devices=devices, time="?v={}".format(time.time()))
 
     @staticmethod
-    @app.route('/<d_id>')
+    @app.route('/<d_id>', methods=['GET'])
     def device(d_id):
         devices = SerialManager.getDevices()
         devices.sort()
@@ -43,10 +43,10 @@ class WebGUI(Thread):
             controller = SerialManager.getController(d_id)
             if controller:
                 WebsocketConsole.setSource(controller.log_file)
-            return render_template('gui.html', devices=devices, d_id=d_id)
+            return render_template('gui.html', devices=devices, d_id=d_id, time="?v={}".format(time.time()))
         except Exception as ex:
             logger.error(ex)
-        return render_template('gui.html', devices=devices)
+        return render_template('gui.html', devices=devices, time="?v={}".format(time.time()))
 
     @staticmethod
     @app.route('/<d_id>/<end_point>', methods=['POST'])
@@ -100,3 +100,17 @@ class WebGUI(Thread):
         except Exception as ex:
             logger.error(ex)
         return Response(status=500)
+
+    @staticmethod
+    @app.after_request
+    def noCacheHeaders(response):
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+
+    @staticmethod
+    @app.template_filter('autoversion')
+    def autoversionFilter(filename):
+        newfilename = "{0}?{1}".format(filename, time.time())
+        return newfilename
