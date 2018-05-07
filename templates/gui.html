@@ -21,7 +21,7 @@
 			<label for="lld">Lower Limit Distance: </label><input id="lld" type="number" min="0" max="100000" required><br><br>
 			<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="100000" required><br><br>
 			<label for="tkwh">Total kWh: </label><input id="tkwh" type="text" required><br><br>
-			<input type="submit" value="Save"><button class="btn" type="button">Cancel</button>
+			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleConfModal()">Cancel</button>
 		</form>
 	</div>
 
@@ -32,6 +32,8 @@
 	<div class="header">
 		{% if d_id %}
 		{{ d_id }}
+		{% else %}
+		Ferraris Arduino Serial Gateway
 		{% endif %}
     </div><!-- .header-->
 
@@ -57,10 +59,10 @@
 		<button class="btn" type="button" id="strt_btn">Start Detection</button>
 		<button class="btn" type="button" id="stp_btn">Stop Current Action</button>
 		<br><br>
-		<button class="btn" type="button" id="conf_btn">Configure</button>
+		<button class="btn" type="button" onclick="toggleConfModal('{{ d_id }}/conf')">Configure</button>
 		<button class="btn" type="button" id="res_btn">Reset</button>
 		<label class="container">Autostart
-			<input type="checkbox" checked="checked" onclick="toggleAstrt(this)">
+			<input id="astrt" type="checkbox" onclick="toggleAstrt(this)">
 			<span class="checkmark"></span>
 		</label>
 	</div>
@@ -71,12 +73,12 @@
 <script>
 	/*
 	httpGetConf('{{ d_id }}/conf');
-    var modal = document.getElementById('modal');
+    var conf_modal = document.getElementById('conf_modal');
     var btn = document.getElementById("myBtn");
     var span = document.getElementsByClassName("close")[0];
     btn.onclick = function() {
         httpGetConf('{{ d_id }}/conf');
-        modal.style.display = "block";
+        conf_modal.style.display = "block";
     };
     span.onclick = function() {
         var nat = document.getElementById("nat");
@@ -90,7 +92,7 @@
                     if (rpkwh.checkValidity()) {
                         if (tkwh.checkValidity()) {
                             httpPostConf('{{ d_id }}/conf', nat.value, dt.value, lld.value, rpkwh.value, tkwh.value);
-							modal.style.display = "none";
+							conf_modal.style.display = "none";
                         } else {
                             tkwh.value = '';
 						}
@@ -108,8 +110,8 @@
 		}
     };
     window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
+        if (event.target == conf_modal) {
+            conf_modal.style.display = "none";
         }
     }*/
 </script>
