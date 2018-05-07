@@ -96,15 +96,15 @@ body {
 	padding-bottom: 15px;
     overflow-y: scroll;
     z-index: 1;
-    background: #efefef;
+    /*background: #efefef;
     -webkit-box-shadow: 3px 0 10px 0 rgba(0,0,0,0.25);
-    box-shadow: 3px 0 10px 0 rgba(0,0,0,0.25);
+    box-shadow: 3px 0 10px 0 rgba(0,0,0,0.25);*/
 }
 
 .content {
 	position: absolute;
 	top: 99px;
-	left: 275px;
+	left: 258px;
 	right: 255px;
 	bottom: 19px;
     z-index: 0;
@@ -211,6 +211,13 @@ input[type=number], select {
 	margin: 4px 2px;
     -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
     box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+    -moz-appearance: textfield;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 input[type=text], select {
