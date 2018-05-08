@@ -68,7 +68,7 @@ class SerialManager(SimpleSingleton, Thread):
                     if device_id:
                         logger.info("connected to device '{}' on '{}'".format(device_id, port))
                         __class__.__port_controller_map[port] = (device_id, DeviceController(serial_con, device_id, __class__.delDevice))
-                        sensor_device = Device("{}-{}".format(device_id, ID_PREFIX), "iot#7eaa88be-f53a-46f5-9daa-c67dd2e231bd", "Ferraris Sensor ({})".format(device_id))
+                        sensor_device = Device("{}-{}".format(device_id, ID_PREFIX), "iot#fd0e1327-d713-41da-adfb-e3853a71db3b", "Ferraris Sensor ({})".format(device_id))
                         sensor_device.addTag("type1", "Ferraris Meter")
                         sensor_device.addTag("type2", "Optical Sensor")
                         try:
