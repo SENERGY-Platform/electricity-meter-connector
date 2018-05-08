@@ -15,13 +15,13 @@
 
   <!-- Modal content -->
 	<div class="modal-content">
-		<form action="">
-			<label for="nat">New Average Threshold: </label><input id="nat" type="number" min="0" max="100000" required><br><br>
+		<form id="configuration" action="javascript:" onsubmit="submitConf('{{ d_id }}');">
+			<label for="nat">Average Threshold: </label><input id="nat" type="number" min="0" max="100000" required><br><br>
 			<label for="dt">Detection Threshold: </label><input id="dt" type="number" min="0" max="100000" required><br><br>
-			<label for="lld">Lower Limit Distance: </label><input id="lld" type="number" min="0" max="100000" required><br><br>
+			<label for="lld">Delta: </label><input id="lld" type="number" min="0" max="100000" required><br><br>
 			<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="100000" required><br><br>
 			<label for="tkwh">Total kWh: </label><input id="tkwh" type="text" required><br><br>
-			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleConfModal()">Cancel</button>
+			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleConfModal();">Cancel</button>
 		</form>
 	</div>
 
@@ -59,10 +59,10 @@
 		<button class="btn" type="button" id="strt_btn">Start Detection</button>
 		<button class="btn" type="button" id="stp_btn">Stop Current Action</button>
 		<br><br>
-		<button class="btn" type="button" onclick="toggleConfModal('{{ d_id }}/conf')">Configure</button>
+		<button class="btn" type="button" onclick="toggleConfModal('{{ d_id }}/conf');">Configure</button>
 		<button class="btn" type="button" id="res_btn">Reset</button>
 		<label class="container">Autostart
-			<input id="astrt" type="checkbox" onclick="toggleAstrt(this)">
+			<input id="astrt" type="checkbox" onclick="toggleAstrt(this);">
 			<span class="checkmark"></span>
 		</label>
 	</div>
