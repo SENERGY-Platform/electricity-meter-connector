@@ -8,6 +8,7 @@ let rpkwh;
 let astrt;
 let tkwh;
 let device_id;
+let console;
 
 window.addEventListener("DOMContentLoaded", function (e) {
     conf_modal = document.getElementById('modal');
@@ -17,17 +18,35 @@ window.addEventListener("DOMContentLoaded", function (e) {
     rpkwh = document.getElementById("rpkwh");
     astrt = document.getElementById("astrt");
     tkwh = document.getElementById("tkwh");
+    console = document.getElementById('console');
+    let content = document.getElementsByClassName('content')[0];
+    let blocker = document.getElementsByClassName('blocker')[0];
+    let subnav = document.getElementsByClassName('sub-navigation')[0];
+    let subnav_btns = subnav.getElementsByClassName('btn');
+    let checkbox = subnav.getElementsByClassName('container')[0];
     if (device_id) {
         getConf(device_id);
         openWS();
+    } else {
+        blocker.style.display = "block";
+        content.style.background = "#f5f5f5";
+        for (let btn of subnav_btns) {
+            btn.style.backgroundColor = "#f5f5f5";
+            btn.style.color = "#d0d0d0";
+            btn.style.boxShadow = "2px 2px 5px 0 rgba(0,0,0,0.15)";
+        }
+        checkbox.style.backgroundColor = "#f5f5f5";
+        checkbox.style.color = "#d0d0d0";
+        checkbox.style.boxShadow = "2px 2px 5px 0 rgba(0,0,0,0.15)";
+        console.style.borderColor = "#c2c2c2";
     }
 });
 
 function openWS() {
    let ws = new WebSocket("ws://" + window.location.hostname + ":5678/");
     ws.onmessage = function (event) {
-        document.getElementById('console').innerHTML += event.data + '<br>';
-        document.getElementById('console').scrollTop = document.getElementById('console').scrollHeight
+        console.innerHTML += event.data + '<br>';
+        console.scrollTop = console.scrollHeight
     };
     window.addEventListener('unload', function (event) { ws.close(1000); });
 }
