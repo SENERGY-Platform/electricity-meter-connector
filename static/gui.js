@@ -23,7 +23,7 @@ function httpPost(uri, header, body) {
     if (uri && header && body) {
         let request = new XMLHttpRequest();
         request.open("POST", uri);
-        request.setRequestHeader(header);
+        request.setRequestHeader(header[0], header[1]);
         request.timeout = 5000;
         request.send(body);
     }
@@ -82,6 +82,19 @@ async function toggleConfModal(uri) {
     } else {
         conf_modal.style.display = "none";
     }
+}
+
+function submitConf(device) {
+    let data = JSON.stringify({
+        nat: nat.value,
+        dt: dt.value,
+        lld: lld.value,
+        rpkwh: rpkwh.value,
+        tkwh: tkwh.value
+    });
+    console.log(data);
+    httpPost(device + "/conf", ["Content-type", "application/json"], data);
+    toggleConfModal();
 }
 
 
