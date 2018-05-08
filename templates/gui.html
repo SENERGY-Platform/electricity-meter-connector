@@ -7,6 +7,9 @@
 	<meta name="description" content="" />
 	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css')|autoversion }}">
 	<script src="{{ url_for('static', filename='gui.js')|autoversion }}"></script>
+	{% if d_id %}
+	<script>setDevice('{{ d_id }}')</script>
+	{% endif %}
 </head>
 
 <body>
@@ -15,11 +18,11 @@
 
   <!-- Modal content -->
 	<div class="modal-content">
-		<form id="configuration" action="javascript:" onsubmit="submitConf('{{ d_id }}');">
-			<label for="nat">Average Threshold: </label><input id="nat" type="number" min="0" max="100000" required><br><br>
-			<label for="dt">Detection Threshold: </label><input id="dt" type="number" min="0" max="100000" required><br><br>
-			<label for="lld">Delta: </label><input id="lld" type="number" min="0" max="100000" required><br><br>
-			<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="100000" required><br><br>
+		<form id="configuration" action="javascript:" onsubmit="submitConf();">
+			<label for="nat">Average Threshold: </label><input id="nat" type="number" min="0" max="30000" required><br><br>
+			<label for="dt">Detection Threshold: </label><input id="dt" type="number" min="0" max="30000" required><br><br>
+			<label for="lld">Delta: </label><input id="lld" type="number" min="0" max="30000" required><br><br>
+			<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="30000" required><br><br>
 			<label for="tkwh">Total kWh: </label><input id="tkwh" type="text" required><br><br>
 			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleConfModal();">Cancel</button>
 		</form>
@@ -54,13 +57,13 @@
 	</div>
 
 	<div class="sub-navigation">
-		<button class="btn" type="button" id="rs_btn">Read Sensor</button>
-		<button class="btn" type="button" id="dbg_btn">Debug Mode</button>
-		<button class="btn" type="button" id="strt_btn">Start Detection</button>
-		<button class="btn" type="button" id="stp_btn">Stop Current Action</button>
+		<button class="btn" type="button" id="rs_btn" onclick="httpPost('{{ d_id }}/rs');">Read Sensor</button>
+		<button class="btn" type="button" id="dbg_btn" onclick="httpPost('{{ d_id }}/dbg');">Debug Mode</button>
+		<button class="btn" type="button" id="strt_btn" onclick="httpPost('{{ d_id }}/strt');">Start Detection</button>
+		<button class="btn" type="button" id="stp_btn" onclick="httpPost('{{ d_id }}/stp');">Stop Current Action</button>
 		<br><br>
-		<button class="btn" type="button" onclick="toggleConfModal('{{ d_id }}/conf');">Configure</button>
-		<button class="btn" type="button" id="res_btn">Reset</button>
+		<button class="btn" type="button" onclick="toggleConfModal();">Configure</button>
+		<button class="btn" type="button" id="res_btn" onclick="httpPost('{{ d_id }}/res');">Reset</button>
 		<label class="container">Autostart
 			<input id="astrt" type="checkbox" onclick="toggleAstrt(this);">
 			<span class="checkmark"></span>
@@ -69,52 +72,6 @@
 	{% endif %}
 
 </div><!-- .wrapper -->
-
-<script>
-	/*
-	httpGetConf('{{ d_id }}/conf');
-    var conf_modal = document.getElementById('conf_modal');
-    var btn = document.getElementById("myBtn");
-    var span = document.getElementsByClassName("close")[0];
-    btn.onclick = function() {
-        httpGetConf('{{ d_id }}/conf');
-        conf_modal.style.display = "block";
-    };
-    span.onclick = function() {
-        var nat = document.getElementById("nat");
-        var dt = document.getElementById("dt");
-        var lld = document.getElementById("lld");
-        var rpkwh = document.getElementById("rpkwh");
-        var tkwh = document.getElementById("tkwh");
-        if (nat.checkValidity()) {
-            if (dt.checkValidity()) {
-                if (lld.checkValidity()) {
-                    if (rpkwh.checkValidity()) {
-                        if (tkwh.checkValidity()) {
-                            httpPostConf('{{ d_id }}/conf', nat.value, dt.value, lld.value, rpkwh.value, tkwh.value);
-							conf_modal.style.display = "none";
-                        } else {
-                            tkwh.value = '';
-						}
-					} else {
-                        rpkwh.value = '';
-					}
-                } else {
-                    lld.value = '';
-				}
-            } else {
-                dt.value = '';
-			}
-        } else {
-            nat.value = '';
-		}
-    };
-    window.onclick = function(event) {
-        if (event.target == conf_modal) {
-            conf_modal.style.display = "none";
-        }
-    }*/
-</script>
 
 </body>
 </html>
