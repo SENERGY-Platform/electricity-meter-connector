@@ -173,6 +173,8 @@ class DeviceController(Thread):
                             return True
                         else:
                             break
+                    else:
+                        self._writeToOutput('busy - operation not possible')
                 except Empty:
                     pass
         except (SerialException, SerialTimeoutException) as ex:
@@ -229,6 +231,8 @@ class DeviceController(Thread):
                                 return True
                             else:
                                 break
+                        else:
+                            self._writeToOutput('busy - operation not possible')
                     except Empty:
                         pass
             except (SerialException, SerialTimeoutException) as ex:
