@@ -123,9 +123,9 @@ async function getConf(device) {
         lld.value = conf.lld;
         rpkwh.value = conf.rpkwh;
         tkwh.value = conf.tkwh;
-        if (conf.strt === "0"){
+        if (conf.strt === 0){
             astrt.checked = false;
-        } else if (conf.strt === "1") {
+        } else if (conf.strt === 1) {
             astrt.checked = true;
         }
         return true
