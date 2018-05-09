@@ -151,7 +151,7 @@ body {
 	right: 0;
 	bottom: 0;
     padding: 15px;
-	overflow: scroll;
+	overflow-y: scroll;
 	border-style: dotted;
 	border-width: 1px;
 	font-size: 16px;
@@ -265,7 +265,7 @@ input[type=submit]:hover {
 .modal {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
-    z-index: 3; /* Sit on top */
+    z-index: 5; /* Sit on top */
     left: 0;
     top: 0;
     width: 100%; /* Full width */
