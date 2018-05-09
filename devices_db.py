@@ -141,15 +141,3 @@ class DevicesDatabase(metaclass=Singleton):
         if result:
             return result[0][0]
         return None
-
-"""
-test = DevicesDatabase()
-test.addDevice('ASDFG')
-test.updateDeviceConf('ASDFG', nat=6000, dt=100, strt=1, rpkwh=75, lld=20, kWh=245.45654654)
-logger.info(test.getDeviceConf('ASDFG'))
-test.updateDeviceConf('ASDFG', kWh=275.456787)
-logger.info(test.getDeviceConf('ASDFG'))
-test.updateDeviceConf('ASDFG', nat=4000, dt=100, strt=1, rpkwh=75, lld=30)
-logger.info(test.getDeviceConf('ASDFG'))
-logger.info(test.getIdPrefix())
-"""
