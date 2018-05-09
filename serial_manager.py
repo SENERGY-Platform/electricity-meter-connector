@@ -60,21 +60,25 @@ class SerialManager(SimpleSingleton, Thread):
     def _monitorPorts(self):
         ports = [val.device for val in serial.tools.list_ports.grep("usb")]
         new_p, missing_p = self._diff(__class__.__port_controller_map, ports)
+        flatten = lambda li: [item for sublist in li for item in sublist]
         if new_p:
             for port in new_p:
                 serial_con = self._getSerialCon(port)
                 if serial_con:
                     device_id = self._getDeviceID(serial_con)
                     if device_id:
-                        logger.info("connected to device '{}' on '{}'".format(device_id, port))
-                        __class__.__port_controller_map[port] = (device_id, DeviceController(serial_con, device_id, __class__.delDevice))
-                        sensor_device = Device("{}-{}".format(device_id, ID_PREFIX), "iot#fd0e1327-d713-41da-adfb-e3853a71db3b", "Ferraris Sensor ({})".format(device_id))
-                        sensor_device.addTag("type1", "Ferraris Meter")
-                        sensor_device.addTag("type2", "Optical Sensor")
-                        try:
-                            Client.add(sensor_device)
-                        except AttributeError:
-                            DevicePool.add(sensor_device)
+                        if device_id not in flatten(__class__.__port_controller_map.values()):
+                            logger.info("connected to device '{}' on '{}'".format(device_id, port))
+                            __class__.__port_controller_map[port] = (device_id, DeviceController(serial_con, device_id, __class__.delDevice))
+                            sensor_device = Device("{}-{}".format(device_id, ID_PREFIX), "iot#fd0e1327-d713-41da-adfb-e3853a71db3b", "Ferraris Sensor ({})".format(device_id))
+                            sensor_device.addTag("type1", "Ferraris Meter")
+                            sensor_device.addTag("type2", "Optical Sensor")
+                            try:
+                                Client.add(sensor_device)
+                            except AttributeError:
+                                DevicePool.add(sensor_device)
+                        else:
+                            logger.warning("device '{}' already exists".format(device_id))
         if missing_p:
             for port in missing_p:
                 logger.info("device on '{}' disconnected".format(port))
