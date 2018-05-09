@@ -3,8 +3,8 @@ try:
     from connector.client import Client
     from modules.device_pool import DevicePool
     from connector.device import Device
-    from device_controller import DeviceController
-    from conf_manager import ID_PREFIX
+    from device_controller import DeviceController, ID_PREFIX
+    from devices_db import DevicesDatabase
     from logger import root_logger
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))

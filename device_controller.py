@@ -1,6 +1,6 @@
 try:
     from connector.client import Client
-    from conf_manager import writeDeviceConf, readDeviceConf, ID_PREFIX
+    from devices_db import DevicesDatabase
     from logger import root_logger
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
@@ -22,6 +22,8 @@ if not os.path.exists(devices_path):
 serial_logger = logging.getLogger("serial_logger")
 serial_logger.setLevel(logging.DEBUG)
 
+devices_db = DevicesDatabase()
+ID_PREFIX = devices_db.getIdPrefix()
 
 
 class DeviceController(Thread):
@@ -31,15 +33,6 @@ class DeviceController(Thread):
         self._device_id = device_id
         self._callbk = callbk
         self._commands = Queue()
-        if not os.path.isfile('{}/{}'.format(devices_path, device_id)):
-            file = open('{}/{}'.format(devices_path, device_id), 'w')
-            file.write(str(float(0)))
-            file.close()
-            self._kWh = float(0)
-        else:
-            file = open('{}/{}'.format(devices_path, device_id), 'r')
-            self._kWh = float(file.read())
-            file.close()
         self._serial_logger = serial_logger.getChild(device_id)
         self.log_file = os.path.join(os.path.dirname(__file__), '{}/{}.log'.format(devices_path, device_id))
         if not self._serial_logger.hasHandlers():
@@ -49,8 +42,9 @@ class DeviceController(Thread):
         self._nat = 0
         self._dt = 0
         self._lld = 0
-        self._strt = '0'
+        self._strt = 0
         self._rpkwh = 0
+        self._kWh = 0.0
         self.start()
 
     def _writeToOutput(self, data, src=None):
@@ -75,18 +69,19 @@ class DeviceController(Thread):
         return None
 
     def _loadConf(self):
-        conf = readDeviceConf(self._device_id)
+        conf = devices_db.getDeviceConf(self._device_id)
         if not conf:
             logger.warning("no configuration found for device '{}'".format(self._device_id))
-            return writeDeviceConf(self._device_id, self._nat, self._dt, self._lld, self._rpkwh, self._strt)
+            return devices_db.addDevice(self._device_id)
         else:
             logger.info("loaded configuration for device '{}'".format(self._device_id))
-            self._nat = conf[0]
-            self._dt = conf[1]
-            self._lld = conf[2]
-            self._rpkwh = conf[3]
-            self._strt = conf[4]
-            if int(self._strt):
+            self._nat = conf['nat']
+            self._dt = conf['dt']
+            self._lld = conf['lld']
+            self._rpkwh = conf['rpkwh']
+            self._strt = conf['strt']
+            self._kWh = float(conf['kWh'])
+            if self._strt:
                 self.startDetection()
             return self._configureDevice(self._nat, self._dt, self._lld, True)
 
@@ -109,7 +104,7 @@ class DeviceController(Thread):
         self._commands.put(functools.partial(self._configureDevice, nat, dt, lld))
 
     def _configureDevice(self, nat, dt, lld, init=False):
-        writeDeviceConf(self._device_id, nat, dt, lld)
+        devices_db.updateDeviceConf(self._device_id, nat=nat, dt=dt, lld=lld)
         self._nat = nat
         self._dt = dt
         self._lld = lld
@@ -138,12 +133,12 @@ class DeviceController(Thread):
         else:
             raise __class__.Interrupt
 
-    def setRotPerKwh(self, ws):
-        self._commands.put(functools.partial(self._setRotPerKwh, ws))
+    def setRotPerKwh(self, rpkwh):
+        self._commands.put(functools.partial(self._setRotPerKwh, rpkwh))
 
-    def _setRotPerKwh(self, ws):
-        writeDeviceConf(self._device_id, rpkwh=ws)
-        self._rpkwh = ws
+    def _setRotPerKwh(self, rpkwh):
+        devices_db.updateDeviceConf(self._device_id, rpkwh=rpkwh)
+        self._rpkwh = rpkwh
 
     def setKwh(self, kwh):
         self._commands.put(functools.partial(self._setKwh, kwh))
@@ -151,10 +146,8 @@ class DeviceController(Thread):
     def _setKwh(self, kwh):
         if type(kwh) is str:
             kwh = kwh.replace(',', '.')
+        devices_db.updateDeviceConf(self._device_id, kWh=str(kwh))
         self._kWh = float(kwh)
-        file = open('{}/{}'.format(devices_path, self._device_id), 'w')
-        file.write(str(self._kWh))
-        file.close()
 
     def readSensor(self):
         self._commands.put(self._readSensor)
@@ -196,9 +189,7 @@ class DeviceController(Thread):
 
     def _calcAndWriteTotal(self, kwh):
         self._kWh = self._kWh + kwh
-        file = open('{}/{}'.format(devices_path, self._device_id), 'w')
-        file.write(str(self._kWh))
-        file.close()
+        devices_db.updateDeviceConf(self._device_id, kWh=str(self._kWh))
 
     def startDetection(self):
         self._commands.put(self._startDetection)
@@ -269,11 +260,11 @@ class DeviceController(Thread):
             self._writeToOutput("please configure device first")
 
     def enableAutoStart(self):
-        writeDeviceConf(self._device_id, strt='1')
+        devices_db.updateDeviceConf(self._device_id, strt='1')
         self._strt = '1'
 
     def disableAutoStart(self):
-        writeDeviceConf(self._device_id, strt='0')
+        devices_db.updateDeviceConf(self._device_id, strt='0')
         self._strt = '0'
 
     def haltController(self):
