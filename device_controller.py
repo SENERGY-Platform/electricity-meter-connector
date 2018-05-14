@@ -215,6 +215,8 @@ class DeviceController(Thread):
                             }),
                             block=False
                         )
+                    elif 'CAL' in msg.decode():
+                        self._writeToOutput('CAL', 'D')
                     try:
                         command = self._commands.get_nowait()
                         if command == self._stopAction:
