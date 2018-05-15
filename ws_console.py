@@ -36,15 +36,17 @@ class WebsocketConsole(Thread):
                                 line = line.decode().replace('\n', '').replace('\r', '')
                                 await websocket.send(line)
                             except Exception as ex:
-                                logger.warning("could not send data - {}".format(ex))
+                                logger.error("could not send data - {}".format(ex))
                                 break
                     except asyncio.TimeoutError:
                         pass
+                    except Exception as ex:
+                        logger.error(ex)
                     try:
                         await websocket.ping()
                     except Exception as ex:
                         if not any(code in str(ex) for code in ["1000", "1001"]):
-                            logger.warning(ex)
+                            logger.error(ex)
                         break
                 tail_process.kill()
                 await tail_process.wait()
@@ -55,7 +57,7 @@ class WebsocketConsole(Thread):
                     await asyncio.sleep(1)
                 except Exception as ex:
                     if not any(code in str(ex) for code in ["1000", "1001"]):
-                        logger.warning(ex)
+                        logger.error(ex)
                     break
 
     def run(self):
@@ -68,6 +70,10 @@ class WebsocketConsole(Thread):
             self._event_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self._event_loop)
             logger.debug("created new event loop")
-        server = websockets.serve(self.send, '0.0.0.0', 5678)
-        self._event_loop.run_until_complete(server)
-        self._event_loop.run_forever()
+        try:
+            server = websockets.serve(self.send, '0.0.0.0', 5678)
+            self._event_loop.run_until_complete(server)
+            self._event_loop.run_forever()
+        except Exception as ex:
+            logger.error(ex)
+        logger.error('websocket console exited')
