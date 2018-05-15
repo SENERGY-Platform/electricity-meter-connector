@@ -109,7 +109,7 @@ body {
     background: #efefef;
     -webkit-box-shadow: 3px 0 7px 0 rgba(0,0,0,0.30);
     box-shadow: 3px 0 7px 0 rgba(0,0,0,0.30);
-    min-height: 443px;
+    min-height: 503px;
 }
 
 .content {
@@ -120,14 +120,14 @@ body {
 	bottom: 19px;
     z-index: 0;
     background: white;
-    min-height: 435px;
+    min-height: 495px;
 }
 
 .sub-navigation {
 	position: absolute;
 	top: 80px;
     right: 0;
-    bottom: 55px;
+    bottom: 0;
 	width: 238px;
     padding-top: 15px;
 	padding-left: 15px;
