@@ -158,7 +158,34 @@ class DeviceController(Thread):
             self._writeToOutput('MR', 'C')
             while True:
                 msg = self._serial_con.readline()
-                self._writeToOutput(msg, 'D')
+                if msg:
+                    self._writeToOutput(msg, 'D')
+                try:
+                    command = self._commands.get_nowait()
+                    if command == self._stopAction:
+                        if self._stopAction():
+                            return True
+                        else:
+                            break
+                    else:
+                        self._writeToOutput('busy - operation not possible')
+                except Empty:
+                    pass
+        except (SerialException, SerialTimeoutException) as ex:
+            logger.error(ex)
+        raise __class__.Interrupt
+
+    def findLowest(self):
+        self._commands.put(self._findLowest)
+
+    def _findLowest(self):
+        try:
+            self._serial_con.write(b'FL\n')
+            self._writeToOutput('FL', 'C')
+            while True:
+                msg = self._serial_con.readline()
+                if msg:
+                    self._writeToOutput(msg, 'D')
                 try:
                     command = self._commands.get_nowait()
                     if command == self._stopAction:
