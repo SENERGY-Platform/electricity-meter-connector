@@ -31,7 +31,7 @@ class WebsocketConsole(Thread):
                 while True:
                     try:
                         line = await asyncio.wait_for(tail_process.stdout.readline(), timeout=1, loop=self._event_loop)
-                        if line:
+                        if line and websocket.open:
                             try:
                                 line = line.decode().replace('\n', '').replace('\r', '')
                                 await websocket.send(line)
