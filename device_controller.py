@@ -233,6 +233,7 @@ class DeviceController(Thread):
             raise __class__.Interrupt
         else:
             logger.warning("detection for device '{}' failed - rounds/kWh not set".format(self._device_id))
+            self._writeToOutput('rotations/kWh not set')
 
     def startDebug(self):
         self._commands.put(self._startDebug)
@@ -259,7 +260,8 @@ class DeviceController(Thread):
                 logger.error(ex)
             raise __class__.Interrupt
         else:
-            self._writeToOutput("please configure device first")
+            logger.warning("debug for device '{}' failed - rounds/kWh not set".format(self._device_id))
+            self._writeToOutput('rotations/kWh not set')
 
     def enableAutoStart(self):
         devices_db.updateDeviceConf(self._device_id, strt='1')
