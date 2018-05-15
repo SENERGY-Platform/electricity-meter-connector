@@ -49,11 +49,14 @@ window.addEventListener("DOMContentLoaded", function (e) {
 
 function openWS() {
    let ws = new WebSocket("ws://" + window.location.hostname + ":5678/");
-    ws.onmessage = function (event) {
-        ws_console.innerHTML += event.data + '<br>';
-        ws_console.scrollTop = ws_console.scrollHeight
-    };
-    window.addEventListener('unload', function (event) { ws.close(1000); });
+   ws.addEventListener('message', function (event) {
+       let text = document.createTextNode(event.data);
+       let br = document.createElement('br');
+       ws_console.appendChild(text);
+       ws_console.appendChild(br);
+       ws_console.scrollTop = ws_console.scrollHeight
+   });
+   window.addEventListener('unload', function (event) { ws.close(1000); });
 }
 
 function setDevice(device) {
