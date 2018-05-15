@@ -57,6 +57,9 @@ class WebGUI(Thread):
                 if end_point == "rs":
                     controller.readSensor()
                     return Response(status=200)
+                if end_point == "fl":
+                    controller.findLowest()
+                    return Response(status=200)
                 if end_point == "dbg":
                     controller.startDebug()
                     return Response(status=200)
