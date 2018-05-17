@@ -1,9 +1,6 @@
 try:
     from modules.singleton import SimpleSingleton
-    from connector.client import Client
-    from modules.device_pool import DevicePool
-    from connector.device import Device
-    from device_controller import DeviceController, ID_PREFIX
+    from device_controller import DeviceController
     from devices_db import DevicesDatabase
     from logger import root_logger
 except ImportError as ex:
@@ -40,7 +37,7 @@ class SerialManager(SimpleSingleton, Thread):
         except serial.SerialException:
             logger.warning("device on '{}' busy or has errors".format(port))
 
-    def _getDeviceID(self, serial_con: serial.Serial) -> str:
+    def _getDipID(self, serial_con: serial.Serial) -> str:
         try:
             serial_con.write(b'ID\n')
             id = serial_con.readline()
@@ -65,35 +62,29 @@ class SerialManager(SimpleSingleton, Thread):
             for port in new_p:
                 serial_con = self._getSerialCon(port)
                 if serial_con:
-                    device_id = self._getDeviceID(serial_con)
-                    if device_id:
-                        if device_id not in flatten(__class__.__port_controller_map.values()):
-                            logger.info("connected to device '{}' on '{}'".format(device_id, port))
-                            __class__.__port_controller_map[port] = (device_id, DeviceController(serial_con, device_id, __class__.delDevice))
-                            sensor_device = Device("{}-{}".format(device_id, ID_PREFIX), "iot#fd0e1327-d713-41da-adfb-e3853a71db3b", "Ferraris Sensor ({})".format(device_id))
-                            sensor_device.addTag("type1", "Ferraris Meter")
-                            sensor_device.addTag("type2", "Optical Sensor")
-                            try:
-                                Client.add(sensor_device)
-                            except AttributeError:
-                                DevicePool.add(sensor_device)
+                    dip_id = self._getDipID(serial_con)
+                    if dip_id:
+                        if not __class__.getController(dip_id):
+                            logger.info("connected to device '{}' on '{}'".format(dip_id, port))
+                            __class__.__port_controller_map[port] = DeviceController(serial_con, dip_id, __class__.delDevice)
                         else:
-                            logger.warning("device '{}' already exists".format(device_id))
+                            logger.warning("device '{}' already exists".format(dip_id))
+                            serial_con.close()
         if missing_p:
             for port in missing_p:
                 logger.info("device on '{}' disconnected".format(port))
                 self.delDevice(port)
 
     @staticmethod
-    def getController(device_id) -> DeviceController:
-        for d_id, controller in __class__.__port_controller_map.values():
-            if device_id == d_id:
+    def getController(dip_id) -> DeviceController:
+        for controller in __class__.__port_controller_map.values():
+            if dip_id == controller._dip_id:
                 return controller
 
     @staticmethod
     def getDevices() -> list:
         try:
-            return [val[0] for val in __class__.__port_controller_map.values()]
+            return [val._dip_id for val in __class__.__port_controller_map.values()]
         except IndexError:
             pass
         return list()
@@ -103,11 +94,7 @@ class SerialManager(SimpleSingleton, Thread):
         if port in __class__.__port_controller_map:
             controller = __class__.__port_controller_map.get(port)
             del __class__.__port_controller_map[port]
-            try:
-                Client.disconnect("{}-{}".format(controller[0], ID_PREFIX))
-            except AttributeError:
-                DevicePool.remove("{}-{}".format(controller[0], ID_PREFIX))
-            controller[1].haltController()
+            controller.haltController()
 
     def run(self):
         logger.debug("starting monitor routine")
