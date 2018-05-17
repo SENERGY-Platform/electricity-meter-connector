@@ -15,17 +15,19 @@ class DevicesDatabase(metaclass=Singleton):
     _id_field = ('id', 'TEXT')
     _nat_field = ('nat', 'INTEGER')
     _dt_field = ('dt', 'INTEGER')
+    _ndt_field = ('ndt', 'INTEGER')
     _strt_field = ('strt', 'INTEGER')
     _rpkwh_field = ('rpkwh', 'INTEGER')
     _lld_field = ('lld', 'INTEGER')
     _kWh_field = ('kWh', 'TEXT')
+    _name_field = ('name', 'TEXT')
     _sm_conf_table = 'sm_conf'
     _id_prefix_field = ('id_prefix', 'TEXT')
 
     def __init__(self):
         if not os.path.isfile(__class__._db_path):
             logger.debug('no database found')
-            query = 'CREATE TABLE {table} ({id} {id_t} PRIMARY KEY, {nat} {nat_t} DEFAULT 9000, {dt} {dt_t} DEFAULT 150, {strt} {strt_t} DEFAULT 0, {rpkwh} {rpkwh_t} DEFAULT 0, {lld} {lld_t} DEFAULT 20, {kWh} {kWh_t} DEFAULT 0.0)'.format(
+            query = 'CREATE TABLE {table} ({id} {id_t} PRIMARY KEY, {nat} {nat_t} DEFAULT 9000, {dt} {dt_t} DEFAULT 100, {ndt} {ndt_t} DEFAULT 100, {strt} {strt_t} DEFAULT 0, {rpkwh} {rpkwh_t} DEFAULT 0, {lld} {lld_t} DEFAULT 20, {kWh} {kWh_t} DEFAULT 0.0, {name} {name_t})'.format(
                 table=__class__._devices_table,
                 id=__class__._id_field[0],
                 id_t=__class__._id_field[1],
@@ -33,6 +35,8 @@ class DevicesDatabase(metaclass=Singleton):
                 nat_t=__class__._nat_field[1],
                 dt=__class__._dt_field[0],
                 dt_t=__class__._dt_field[1],
+                ndt=__class__._ndt_field[0],
+                ndt_t=__class__._ndt_field[1],
                 strt=__class__._strt_field[0],
                 strt_t=__class__._strt_field[1],
                 rpkwh=__class__._rpkwh_field[0],
@@ -40,7 +44,9 @@ class DevicesDatabase(metaclass=Singleton):
                 lld=__class__._lld_field[0],
                 lld_t=__class__._lld_field[1],
                 kWh=__class__._kWh_field[0],
-                kWh_t=__class__._kWh_field[1]
+                kWh_t=__class__._kWh_field[1],
+                name=__class__._name_field[0],
+                name_t=__class__._name_field[1]
             )
             self._executeQuery(query)
             query = 'CREATE TABLE {table} ({id_prefix} {id_prefix_t})'.format(
@@ -84,14 +90,16 @@ class DevicesDatabase(metaclass=Singleton):
         return self._executeQuery(query)
 
     def getDeviceConf(self, device_id):
-        query = 'SELECT {nat}, {dt}, {strt}, {rpkwh}, {lld}, {kWh} FROM {table} WHERE {id}="{id_v}"'.format(
+        query = 'SELECT {nat}, {dt}, {ndt}, {strt}, {rpkwh}, {lld}, {kWh}, {name} FROM {table} WHERE {id}="{id_v}"'.format(
             table=__class__._devices_table,
             nat=__class__._nat_field[0],
             dt=__class__._dt_field[0],
+            ndt=__class__._ndt_field[0],
             strt=__class__._strt_field[0],
             rpkwh=__class__._rpkwh_field[0],
             lld=__class__._lld_field[0],
             kWh=__class__._kWh_field[0],
+            name=__class__._name_field[0],
             id=__class__._id_field[0],
             id_v=device_id
         )
@@ -100,19 +108,23 @@ class DevicesDatabase(metaclass=Singleton):
             return {
                 'nat': result[0][0],
                 'dt': result[0][1],
-                'strt': result[0][2],
-                'rpkwh': result[0][3],
-                'lld': result[0][4],
-                'kWh': result[0][5],
+                'ndt': result[0][2],
+                'strt': result[0][3],
+                'rpkwh': result[0][4],
+                'lld': result[0][5],
+                'kWh': result[0][6],
+                'name': result[0][7]
             }
         return None
 
-    def updateDeviceConf(self, device_id, nat=None, dt=None, strt=None, rpkwh=None, lld=None, kWh=None):
+    def updateDeviceConf(self, device_id, nat=None, dt=None, ndt=None, strt=None, rpkwh=None, lld=None, kWh=None, name=None):
         values = list()
         if nat:
             values.append('{}={}'.format(__class__._nat_field[0], nat))
         if dt:
             values.append('{}={}'.format(__class__._dt_field[0], dt))
+        if ndt:
+            values.append('{}={}'.format(__class__._ndt_field[0], ndt))
         if strt:
             values.append('{}={}'.format(__class__._strt_field[0], strt))
         if rpkwh:
@@ -121,6 +133,8 @@ class DevicesDatabase(metaclass=Singleton):
             values.append('{}={}'.format(__class__._lld_field[0], lld))
         if kWh:
             values.append('{}="{}"'.format(__class__._kWh_field[0], str(kWh)))
+        if name:
+            values.append('{}="{}"'.format(__class__._name_field[0], str(name)))
         values = ', '.join(map(str, values))
         if values:
             query = 'UPDATE {table} SET {values} WHERE {id}="{id_v}"'.format(
