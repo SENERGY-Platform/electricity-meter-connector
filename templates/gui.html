@@ -35,9 +35,7 @@
 <div class="wrapper">
 
 	<div class="header" id="title">
-		{% if d_id %}
-		Device {{ d_id }}
-		{% else %}
+		{% if not d_id %}
 		Ferraris Sensor Gateway
 		{% endif %}
     </div><!-- .header-->
