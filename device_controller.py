@@ -41,10 +41,12 @@ class DeviceController(Thread):
             self._serial_logger.addHandler(log_handler)
         self._nat = 0
         self._dt = 0
+        self._ndt = 0
         self._lld = 0
         self._strt = 0
         self._rpkwh = 0
         self._kWh = 0.0
+        self._name = str()
         self.start()
 
     def _writeToOutput(self, data, src=None):
@@ -77,13 +79,15 @@ class DeviceController(Thread):
             logger.info("loaded configuration for device '{}'".format(self._device_id))
             self._nat = conf['nat']
             self._dt = conf['dt']
+            self._ndt = conf['ndt']
             self._lld = conf['lld']
             self._rpkwh = conf['rpkwh']
             self._strt = conf['strt']
             self._kWh = float(conf['kWh'])
+            self._name = conf['name']
             if self._strt:
                 self.startDetection()
-            return self._configureDevice(self._nat, self._dt, self._lld, True)
+            return self._configureDevice(self._nat, self._dt, self._ndt, self._lld, True)
 
     def _closeConnection(self):
         self._serial_con.close()
@@ -100,20 +104,21 @@ class DeviceController(Thread):
             'tkwh': self._kWh
         }
 
-    def configureDevice(self, nat, dt, lld):
-        self._commands.put(functools.partial(self._configureDevice, nat, dt, lld))
+    def configureDevice(self, nat, dt, ndt, lld):
+        self._commands.put(functools.partial(self._configureDevice, nat, dt, ndt, lld))
 
-    def _configureDevice(self, nat, dt, lld, init=False):
+    def _configureDevice(self, nat, dt, ndt, lld, init=False):
         devices_db.updateDeviceConf(self._device_id, nat=nat, dt=dt, lld=lld)
         self._nat = nat
         self._dt = dt
+        self._ndt = ndt
         self._lld = lld
         try:
             self._serial_con.write(b'CONF\n')
             self._writeToOutput('CONF', 'C')
-            if self._waitFor('NAT:DT:LLD'):
-                self._writeToOutput('NAT:DT:LLD', 'D')
-                conf = '{}:{}:{}\n'.format(nat, dt, lld)
+            if self._waitFor('NAT:DT:NDT:LLD'):
+                self._writeToOutput('NAT:DT:NDT:LLD', 'D')
+                conf = '{}:{}:{}:{}\n'.format(nat, dt, ndt, lld)
                 self._serial_con.write(conf.encode())
                 self._writeToOutput(conf, 'C')
                 resp = self._waitFor(':')
@@ -148,6 +153,13 @@ class DeviceController(Thread):
             kwh = kwh.replace(',', '.')
         devices_db.updateDeviceConf(self._device_id, kWh=str(kwh))
         self._kWh = float(kwh)
+
+    def setName(self, name):
+        self._commands.put(functools.partial(self._setName, name))
+
+    def _setName(self, name):
+        devices_db.updateDeviceConf(self._device_id, name=str(name))
+        self._name = str(name)
 
     def readSensor(self):
         self._commands.put(self._readSensor)
