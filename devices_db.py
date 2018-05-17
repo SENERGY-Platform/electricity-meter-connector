@@ -27,7 +27,7 @@ class DevicesDatabase(metaclass=Singleton):
     def __init__(self):
         if not os.path.isfile(__class__._db_path):
             logger.debug('no database found')
-            query = 'CREATE TABLE {table} ({id} {id_t} PRIMARY KEY, {nat} {nat_t} DEFAULT 9000, {dt} {dt_t} DEFAULT 100, {ndt} {ndt_t} DEFAULT 100, {strt} {strt_t} DEFAULT 0, {rpkwh} {rpkwh_t} DEFAULT 0, {lld} {lld_t} DEFAULT 20, {kWh} {kWh_t} DEFAULT 0.0, {name} {name_t})'.format(
+            query = 'CREATE TABLE {table} ({id} {id_t} PRIMARY KEY, {nat} {nat_t} DEFAULT 9000, {dt} {dt_t} DEFAULT 100, {ndt} {ndt_t} DEFAULT 200, {strt} {strt_t} DEFAULT 0, {rpkwh} {rpkwh_t} DEFAULT 0, {lld} {lld_t} DEFAULT 20, {kWh} {kWh_t} DEFAULT 0.0, {name} {name_t})'.format(
                 table=__class__._devices_table,
                 id=__class__._id_field[0],
                 id_t=__class__._id_field[1],
