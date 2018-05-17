@@ -3,21 +3,26 @@
 let conf_modal;
 let nat;
 let dt;
+let ndt;
 let lld;
 let rpkwh;
 let astrt;
 let tkwh;
 let device_id;
+let name;
+let device_name;
 let ws_console;
 
 window.addEventListener("DOMContentLoaded", function (e) {
     conf_modal = document.getElementById('modal');
     nat = document.getElementById("nat");
     dt = document.getElementById("dt");
+    ndt = document.getElementById("ndt");
     lld = document.getElementById("lld");
     rpkwh = document.getElementById("rpkwh");
     astrt = document.getElementById("astrt");
     tkwh = document.getElementById("tkwh");
+    name = document.getElementById("name");
     ws_console = document.getElementById('console');
     let content = document.getElementsByClassName('content')[0];
     let blocker = document.getElementsByClassName('blocker')[0];
@@ -123,9 +128,12 @@ async function getConf(device) {
         let conf = JSON.parse(result);
         nat.value = conf.nat;
         dt.value = conf.dt;
+        ndt.value = conf.ndt;
         lld.value = conf.lld;
         rpkwh.value = conf.rpkwh;
         tkwh.value = conf.tkwh;
+        device_name = conf.name;
+        name.value = device_name;
         if (conf.strt === 0){
             astrt.checked = false;
         } else if (conf.strt === 1) {
@@ -152,9 +160,11 @@ function submitConf(device=device_id) {
     let data = JSON.stringify({
         nat: nat.value,
         dt: dt.value,
+        ndt: ndt.value,
         lld: lld.value,
         rpkwh: rpkwh.value,
-        tkwh: tkwh.value
+        tkwh: tkwh.value,
+        name: name.value
     });
     httpPost(device + "/conf", ["Content-type", "application/json"], data);
     toggleConfModal();

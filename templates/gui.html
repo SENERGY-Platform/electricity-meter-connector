@@ -19,10 +19,12 @@
   <!-- Modal content -->
 	<div class="modal-content">
 		<form id="configuration" action="javascript:" onsubmit="submitConf();">
-			<label for="nat">Average Threshold: </label><input id="nat" type="number" min="0" max="30000" required><br><br>
-			<label for="dt">Detection Threshold: </label><input id="dt" type="number" min="0" max="30000" required><br><br>
+			<label for="name">Name: </label><input id="name" type="text"><br><br>
+			<label for="nat">Average Threshold: </label><input id="nat" type="number" min="0" max="100000" required><br><br>
+			<label for="dt">Positive Detection Threshold: </label><input id="dt" type="number" min="0" max="100000" required><br><br>
+			<label for="ndt">Negative Detection Threshold: </label><input id="ndt" type="number" min="0" max="100000" required><br><br>
 			<label for="lld">Delta: </label><input id="lld" type="number" min="0" max="30000" required><br><br>
-			<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="30000" required><br><br>
+			<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="100000" required><br><br>
 			<label for="tkwh">Total kWh: </label><input id="tkwh" type="text" required><br><br>
 			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleConfModal();">Cancel</button>
 		</form>
@@ -32,7 +34,7 @@
 
 <div class="wrapper">
 
-	<div class="header">
+	<div class="header" id="title">
 		{% if d_id %}
 		Device {{ d_id }}
 		{% else %}
