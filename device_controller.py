@@ -194,13 +194,13 @@ class DeviceController(Thread):
             logger.error(ex)
         raise __class__.Interrupt
 
-    def findLowest(self):
-        self._commands.put(self._findLowest)
+    def findExtrema(self):
+        self._commands.put(self._findExtrema)
 
-    def _findLowest(self):
+    def _findExtrema(self):
         try:
-            self._serial_con.write(b'FL\n')
-            self._writeToOutput('FL', 'C')
+            self._serial_con.write(b'FE\n')
+            self._writeToOutput('FE', 'C')
             while True:
                 msg = self._serial_con.readline()
                 if msg:
