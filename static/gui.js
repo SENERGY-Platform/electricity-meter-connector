@@ -134,7 +134,7 @@ async function getConf(device) {
         rpkwh.value = conf.rpkwh;
         tkwh.value = conf.tkwh;
         name.value = conf.name;
-        title.innerHTML = conf.name;
+        title.innerHTML = conf.name + ` (${device_id})`;
         if (conf.strt === 0){
             astrt.checked = false;
         } else if (conf.strt === 1) {
@@ -169,5 +169,5 @@ function submitConf(device=device_id) {
     });
     httpPost(device + "/conf", ["Content-type", "application/json"], data);
     toggleConfModal();
-    title.innerHTML = name.value;
+    title.innerHTML = name.value + ` (${device_id})`;
 }
