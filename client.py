@@ -19,8 +19,8 @@ cw = asyncio.get_child_watcher()
 
 
 if __name__ == '__main__':
+    connector_client = Client(device_manager=DevicePool)
     SerialManager()
     WebsocketConsole(loop)
     WebGUI()
-    connector_client = Client(device_manager=DevicePool)
     loop.run_forever()
