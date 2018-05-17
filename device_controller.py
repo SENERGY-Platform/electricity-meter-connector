@@ -47,7 +47,10 @@ class DeviceController(Thread):
         self._rpkwh = 0
         self._kWh = 0.0
         self._name = str()
-        self.start()
+        if self._loadConf():
+            self.start()
+        else:
+            self._callbk(self._serial_con.port)
 
     def _writeToOutput(self, data, src=None):
         if type(data) is not str:
@@ -74,34 +77,38 @@ class DeviceController(Thread):
         conf = devices_db.getDeviceConf(self._device_id)
         if not conf:
             logger.warning("no configuration found for device '{}'".format(self._device_id))
-            return devices_db.addDevice(self._device_id)
-        else:
+            if devices_db.addDevice(self._device_id):
+                logger.info("created configuration for device '{}'".format(self._device_id))
+                conf = devices_db.getDeviceConf(self._device_id)
+            else:
+                logger.error("could not create configuration for device '{}'".format(self._device_id))
+        if conf:
+            self._setConf(conf)
             logger.info("loaded configuration for device '{}'".format(self._device_id))
-            self._nat = conf['nat']
-            self._dt = conf['dt']
-            self._ndt = conf['ndt']
-            self._lld = conf['lld']
-            self._rpkwh = conf['rpkwh']
-            self._strt = conf['strt']
-            self._kWh = float(conf['kWh'])
-            self._name = conf['name']
-            if self._strt:
-                self.startDetection()
-            return self._configureDevice(self._nat, self._dt, self._ndt, self._lld, True)
+            return True
+        logger.error("could not load configuration for device '{}'".format(self._device_id))
+        return False
 
-    def _closeConnection(self):
-        self._serial_con.close()
-        self._writeToOutput('serial connection closed')
-        self._callbk(self._serial_con.port)
+    def _setConf(self, conf):
+        self._nat = conf['nat']
+        self._dt = conf['dt']
+        self._ndt = conf['ndt']
+        self._lld = conf['lld']
+        self._rpkwh = conf['rpkwh']
+        self._strt = conf['strt']
+        self._kWh = float(conf['kWh'])
+        self._name = conf['name']
 
     def getConf(self):
         return {
             'nat': self._nat,
             'dt': self._dt,
+            'ndt': self._ndt,
             'lld': self._lld,
             'strt': self._strt,
             'rpkwh': self._rpkwh,
-            'tkwh': self._kWh
+            'tkwh': self._kWh,
+            'name': self._name
         }
 
     def configureDevice(self, nat, dt, ndt, lld):
@@ -316,13 +323,20 @@ class DeviceController(Thread):
     def _haltController(self):
         raise __class__.Interrupt
 
+    def _closeConnection(self):
+        self._serial_con.close()
+        self._writeToOutput('serial connection closed')
+        self._callbk(self._serial_con.port)
+
     def run(self):
         logger.debug("starting serial controller for device '{}'".format(self._device_id))
         self._writeToOutput('serial connection open')
         if self._waitFor('RDY'):
             self._writeToOutput('RDY', 'D')
             logger.info("started serial controller for device '{}'".format(self._device_id))
-            if self._loadConf():
+            if self._configureDevice(self._nat, self._dt, self._ndt, self._lld, True):
+                if self._strt:
+                    self.startDetection()
                 while True:
                     try:
                         command = self._commands.get(timeout=1)
