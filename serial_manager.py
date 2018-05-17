@@ -57,7 +57,7 @@ class SerialManager(SimpleSingleton, Thread):
     def _monitorPorts(self):
         ports = [val.device for val in serial.tools.list_ports.grep("usb")]
         new_p, missing_p = self._diff(__class__.__port_controller_map, ports)
-        flatten = lambda li: [item for sublist in li for item in sublist]
+        #flatten = lambda li: [item for sublist in li for item in sublist]
         if new_p:
             for port in new_p:
                 serial_con = self._getSerialCon(port)
@@ -100,4 +100,4 @@ class SerialManager(SimpleSingleton, Thread):
         logger.debug("starting monitor routine")
         while True:
             self._monitorPorts()
-            sleep(1)
+            sleep(5)
