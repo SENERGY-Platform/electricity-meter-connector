@@ -46,9 +46,9 @@
 		<button class="btn" type="button" onclick="location.reload();">Refresh Devices</button><br><br>
 		{% for device in devices %}
 		{% if device == d_id %}
-		<button class="btnactive" type="button" onclick="location.href=('{{ device }}');">Device {{ device }}</button>
+		<button class="btnactive" type="button" onclick="location.href=('{{ device }}');">{{ device }}</button>
 		{% else %}
-		<button class="btn" type="button" onclick="location.href=('{{ device }}');">Device {{ device }}</button>
+		<button class="btn" type="button" onclick="location.href=('{{ device }}');">{{ device }}</button>
 		{% endif %}
 		{% endfor %}
 	</div>
