@@ -160,22 +160,17 @@ class DeviceController(Thread):
         self._rpkwh = rpkwh
 
     def setKwh(self, kwh):
-        self._commands.put(functools.partial(self._setKwh, kwh))
-
-    def _setKwh(self, kwh):
         if type(kwh) is str:
             kwh = kwh.replace(',', '.')
         devices_db.updateDeviceConf(self._dip_id, kWh=str(kwh))
         self._kWh = float(kwh)
 
     def setName(self, name):
-        self._commands.put(functools.partial(self._setName, name))
-
-    def _setName(self, name):
-        self._sensor_name = str(name)
-        devices_db.updateDeviceConf(self._dip_id, name=self._sensor_name)
-        self._device.name = self._sensor_name
-        Client.update(self._device)
+        if not self._sensor_name == str(name):
+            self._sensor_name = str(name)
+            devices_db.updateDeviceConf(self._dip_id, name=self._sensor_name)
+            self._device.name = self._sensor_name
+            Client.update(self._device)
 
     def readSensor(self):
         self._commands.put(self._readSensor)
