@@ -10,8 +10,8 @@ let astrt;
 let tkwh;
 let device_id;
 let name;
-let device_name;
 let ws_console;
+let title;
 
 window.addEventListener("DOMContentLoaded", function (e) {
     conf_modal = document.getElementById('modal');
@@ -23,6 +23,7 @@ window.addEventListener("DOMContentLoaded", function (e) {
     astrt = document.getElementById("astrt");
     tkwh = document.getElementById("tkwh");
     name = document.getElementById("name");
+    title = document.getElementById("title");
     ws_console = document.getElementById('console');
     let content = document.getElementsByClassName('content')[0];
     let blocker = document.getElementsByClassName('blocker')[0];
@@ -132,8 +133,8 @@ async function getConf(device) {
         lld.value = conf.lld;
         rpkwh.value = conf.rpkwh;
         tkwh.value = conf.tkwh;
-        device_name = conf.name;
-        name.value = device_name;
+        name.value = conf.name;
+        title.innerHTML = conf.name;
         if (conf.strt === 0){
             astrt.checked = false;
         } else if (conf.strt === 1) {
@@ -168,4 +169,5 @@ function submitConf(device=device_id) {
     });
     httpPost(device + "/conf", ["Content-type", "application/json"], data);
     toggleConfModal();
+    title.innerHTML = name.value;
 }
