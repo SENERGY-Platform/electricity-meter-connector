@@ -30,6 +30,7 @@ class SerialManager(SimpleSingleton, Thread):
             rdy_msg = serial_con.readline()
             if 'RDY' in rdy_msg.decode():
                 logger.debug("device on '{}' ready".format(port))
+                serial_con.timeout = 4
                 return serial_con
             else:
                 serial_con.close()
