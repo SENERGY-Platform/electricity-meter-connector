@@ -49,7 +49,7 @@ class DeviceController(Thread):
         self._rpkwh = 0
         self._kWh = 0.0
         self._sensor_name = str()
-        if self._loadConf():
+        if self._loadDeviceInfo():
             if not self._sensor_name:
                 self._sensor_name = "Ferraris Sensor ({})".format(self._dip_id)
             self._device = Device("{}-{}".format(self._dip_id, ID_PREFIX), "iot#fd0e1327-d713-41da-adfb-e3853a71db3b", self._sensor_name)
@@ -80,7 +80,7 @@ class DeviceController(Thread):
             logger.error(ex)
         return None
 
-    def _loadConf(self):
+    def _loadDeviceInfo(self):
         conf = devices_db.getDeviceConf(self._dip_id)
         if not conf:
             logger.warning("no configuration found for device '{}'".format(self._dip_id))
@@ -90,13 +90,13 @@ class DeviceController(Thread):
             else:
                 logger.error("could not create configuration for device '{}'".format(self._dip_id))
         if conf:
-            self._setConf(conf)
+            self._setDeviceInfo(conf)
             logger.info("loaded configuration for device '{}'".format(self._dip_id))
             return True
         logger.error("could not load configuration for device '{}'".format(self._dip_id))
         return False
 
-    def _setConf(self, conf):
+    def _setDeviceInfo(self, conf):
         self._nat = conf['nat']
         self._dt = conf['dt']
         self._ndt = conf['ndt']
@@ -112,10 +112,7 @@ class DeviceController(Thread):
             'dt': self._dt,
             'ndt': self._ndt,
             'lld': self._lld,
-            'strt': self._strt,
             'rpkwh': self._rpkwh,
-            'tkwh': self._kWh,
-            'name': self._sensor_name
         }
 
     def configureDevice(self, nat, dt, ndt, lld):
@@ -171,6 +168,13 @@ class DeviceController(Thread):
             devices_db.updateDeviceConf(self._dip_id, name=self._sensor_name)
             self._device.name = self._sensor_name
             Client.update(self._device)
+
+    def getSettings(self):
+        return {
+            'strt': self._strt,
+            'tkwh': self._kWh,
+            'name': self._sensor_name
+        }
 
     def readSensor(self):
         self._commands.put(self._readSensor)
