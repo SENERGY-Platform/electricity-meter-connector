@@ -17,15 +17,23 @@
 <div id="modal" class="modal">
 
   <!-- Modal content -->
+
 	<div class="modal-content">
-		<form id="configuration" action="javascript:" onsubmit="submitConf();">
+		<form id="name_form" action="javascript:" onsubmit="submitSettings();">
 			<label for="name">Name: </label><input id="name" type="text"><br><br>
+			<label for="tkwh">Total kWh: </label><input id="tkwh" type="text" required><br><br>
+			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleSettingsModal();">Cancel</button>
+			<button id="conf_btn" class="btn" type="button" onclick="toggleConfModal();">Configure Sensor</button>
+		</form>
+	</div>
+
+	<div class="modal-content2">
+		<form id="conf_form" action="javascript:" onsubmit="submitConf();">
 			<label for="nat">Average Threshold: </label><input id="nat" type="number" min="0" max="100000" required><br><br>
 			<label for="dt">Positive Detection Threshold: </label><input id="dt" type="number" min="0" max="100000" required><br><br>
 			<label for="ndt">Negative Detection Threshold: </label><input id="ndt" type="number" min="0" max="100000" required><br><br>
 			<label for="lld">Delta: </label><input id="lld" type="number" min="0" max="30000" required><br><br>
 			<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="100000" required><br><br>
-			<label for="tkwh">Total kWh: </label><input id="tkwh" type="text" required><br><br>
 			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleConfModal();">Cancel</button>
 		</form>
 	</div>
@@ -65,7 +73,7 @@
 		<button class="btn" type="button" id="strt_btn" onclick="httpPost('{{ d_id }}/strt');">Start Detection</button>
 		<button class="btn" type="button" id="stp_btn" onclick="httpPost('{{ d_id }}/stp');">Stop Current Action</button>
 		<br><br>
-		<button class="btn" type="button" onclick="toggleConfModal();">Configure</button>
+		<button class="btn" type="button" onclick="toggleSettingsModal();">Settings</button>
 		<button class="btn" type="button" id="res_btn" onclick="httpPost('{{ d_id }}/res');">Reset</button>
 		<label class="container">Autostart
 			<input id="astrt" type="checkbox" onclick="toggleAstrt(this);">

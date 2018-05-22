@@ -205,7 +205,7 @@ body {
 input[type=number], select {
     display: inline-block;
     box-sizing: border-box;
-    width: 462px;
+    width: 444px;
 	border: none;
 	color: black;
 	padding: 16px 32px;
@@ -226,7 +226,7 @@ input[type=number]::-webkit-outer-spin-button {
 input[type=text], select {
     display: inline-block;
     box-sizing: border-box;
-    width: 462px;
+    width: 444px;
 	border: none;
 	color: black;
 	padding: 16px 32px;
@@ -245,7 +245,6 @@ input[type=submit] {
 	text-align: center;
 	font-size: 16px;
 	margin: 4px 2px;
-    margin-right: 20px;
 	transition: 0.3s;
     -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
@@ -277,13 +276,34 @@ input[type=submit]:hover {
 
 /* Modal Content/Box */
 .modal-content {
+    position: relative;
     background-color: #efefef;
-    margin: 80px auto; /* 15% from the top and centered */
+    margin: auto; /* 15% from the top and centered */
+    margin-top: 80px;
     padding: 20px;
-    width: 467px; /* Could be more or less, depending on screen size */
+    width: 448px; /* Could be more or less, depending on screen size */
     font-size: 16px;
     -webkit-box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
     box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
+    z-index: 6;
+}
+
+.modal-content2 {
+    display: none;
+    position: relative;
+    background-color: #efefef;
+    margin: auto; /* 15% from the top and centered */
+    margin-top: -344px;
+    padding: 20px;
+    width: 448px; /* Could be more or less, depending on screen size */
+    font-size: 16px;
+    -webkit-box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
+    box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
+    z-index: 7;
+}
+
+#conf_btn {
+    width: 444px;
 }
 
 /* The Close Button */

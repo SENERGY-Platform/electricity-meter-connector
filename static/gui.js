@@ -1,6 +1,7 @@
 "use strict";
 
 let conf_modal;
+let settings_modal;
 let nat;
 let dt;
 let ndt;
@@ -14,7 +15,8 @@ let ws_console;
 let title;
 
 window.addEventListener("DOMContentLoaded", function (e) {
-    conf_modal = document.getElementById('modal');
+    settings_modal = document.getElementById('modal');
+    conf_modal = document.getElementsByClassName('modal-content2')[0];
     nat = document.getElementById("nat");
     dt = document.getElementById("dt");
     ndt = document.getElementById("ndt");
@@ -32,6 +34,7 @@ window.addEventListener("DOMContentLoaded", function (e) {
     let checkbox = subnav.getElementsByClassName('container')[0];
     if (device_id) {
         getConf(device_id);
+        getSettings(device_id);
         openWS();
     } else {
         blocker.style.display = "block";
@@ -47,8 +50,8 @@ window.addEventListener("DOMContentLoaded", function (e) {
         ws_console.style.borderColor = "#c2c2c2";
     }
     window.addEventListener("click", function (e) {
-        if (e.target === conf_modal) {
-            toggleConfModal();
+        if (e.target === settings_modal) {
+            toggleSettingsModal();
         }
     });
 });
@@ -118,7 +121,7 @@ function toggleAstrt(box) {
     } else if (box.checked === false) {
         httpPost(device_id + "/das");
     }
-    getConf(device_id);
+    //getSettings(device_id);
 }
 
 async function getConf(device) {
@@ -132,6 +135,17 @@ async function getConf(device) {
         ndt.value = conf.ndt;
         lld.value = conf.lld;
         rpkwh.value = conf.rpkwh;
+        return true
+    }
+    return false
+}
+
+async function getSettings(device) {
+    let result = await httpGet(device + "/sett").catch(function (e) {
+        console.log(e);
+    });
+    if (result !== 'timeout' && result !== undefined) {
+        let conf = JSON.parse(result);
         tkwh.value = conf.tkwh;
         name.value = conf.name;
         title.innerHTML = conf.name + ` (${device_id})`;
@@ -143,6 +157,16 @@ async function getConf(device) {
         return true
     }
     return false
+}
+
+function toggleSettingsModal() {
+    if (settings_modal.style.display === "none" || settings_modal.style.display === "") {
+        if (getSettings(device_id)) {
+            settings_modal.style.display = "block";
+        }
+    } else {
+        settings_modal.style.display = "none";
+    }
 }
 
 function toggleConfModal() {
@@ -163,11 +187,20 @@ function submitConf(device=device_id) {
         dt: dt.value,
         ndt: ndt.value,
         lld: lld.value,
-        rpkwh: rpkwh.value,
-        tkwh: tkwh.value,
-        name: name.value
+        rpkwh: rpkwh.value
     });
     httpPost(device + "/conf", ["Content-type", "application/json"], data);
     toggleConfModal();
+}
+
+function submitSettings(device=device_id) {
+    //let test = nat.checkValidity() && dt.checkValidity() && lld.checkValidity() && rpkwh.checkValidity() && tkwh.checkValidity();
+    //console.log(test);
+    let data = JSON.stringify({
+        tkwh: tkwh.value,
+        name: name.value
+    });
+    httpPost(device + "/sett", ["Content-type", "application/json"], data);
+    toggleSettingsModal();
     title.innerHTML = name.value + ` (${device_id})`;
 }
