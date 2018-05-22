@@ -91,14 +91,33 @@ class WebGUI(Thread):
                 if request.method == 'POST':
                     conf = request.get_json()
                     controller.setRotPerKwh(conf['rpkwh'])
-                    controller.setKwh(conf['tkwh'])
-                    controller.setName(conf['name'])
                     controller.configureDevice(conf['nat'], conf['dt'], conf['ndt'], conf['lld'])
                     return Response(status=200)
                 if request.method == 'GET':
                     conf = controller.getConf()
                     if conf:
                         return jsonify(conf)
+                    else:
+                        return Response(status=404)
+        except Exception as ex:
+            logger.error(ex)
+        return Response(status=500)
+
+    @staticmethod
+    @app.route('/<d_id>/sett', methods=['POST', 'GET'])
+    def settings(d_id):
+        try:
+            controller = SerialManager.getController(d_id)
+            if controller:
+                if request.method == 'POST':
+                    sett = request.get_json()
+                    controller.setKwh(sett['tkwh'])
+                    controller.setName(sett['name'])
+                    return Response(status=200)
+                if request.method == 'GET':
+                    sett = controller.getSettings()
+                    if sett:
+                        return jsonify(sett)
                     else:
                         return Response(status=404)
         except Exception as ex:
