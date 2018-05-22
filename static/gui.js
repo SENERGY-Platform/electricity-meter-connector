@@ -202,5 +202,5 @@ function submitSettings(device=device_id) {
     });
     httpPost(device + "/sett", ["Content-type", "application/json"], data);
     toggleSettingsModal();
-    title.innerHTML = name.value + ` (${device_id})`;
+    title.innerHTML = name.value;
 }
