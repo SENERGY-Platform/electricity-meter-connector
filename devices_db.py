@@ -125,7 +125,7 @@ class DevicesDatabase(metaclass=Singleton):
             values.append('{}={}'.format(__class__._dt_field[0], dt))
         if ndt:
             values.append('{}={}'.format(__class__._ndt_field[0], ndt))
-        if strt == 0 or strt == 1:
+        if not strt == None:
             values.append('{}={}'.format(__class__._strt_field[0], strt))
         if rpkwh:
             values.append('{}={}'.format(__class__._rpkwh_field[0], rpkwh))
