@@ -121,7 +121,7 @@ function toggleAstrt(box) {
     } else if (box.checked === false) {
         httpPost(device_id + "/das");
     }
-    //getSettings(device_id);
+    getSettings(device_id);
 }
 
 async function getConf(device) {
@@ -148,7 +148,7 @@ async function getSettings(device) {
         let conf = JSON.parse(result);
         tkwh.value = conf.tkwh;
         name.value = conf.name;
-        title.innerHTML = conf.name + ` (${device_id})`;
+        title.innerHTML = conf.name;
         if (conf.strt === 0){
             astrt.checked = false;
         } else if (conf.strt === 1) {
