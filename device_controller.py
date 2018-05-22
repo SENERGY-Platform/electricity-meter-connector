@@ -318,12 +318,12 @@ class DeviceController(Thread):
             self._writeToOutput('rotations/kWh not set')
 
     def enableAutoStart(self):
-        devices_db.updateDeviceConf(self._dip_id, strt=1)
-        self._strt = 1
+        if devices_db.updateDeviceConf(self._dip_id, strt=1):
+            self._strt = 1
 
     def disableAutoStart(self):
-        devices_db.updateDeviceConf(self._dip_id, strt=0)
-        self._strt = 0
+        if devices_db.updateDeviceConf(self._dip_id, strt=0):
+            self._strt = 0
 
     def haltController(self):
         self._commands.put(self._haltController)
