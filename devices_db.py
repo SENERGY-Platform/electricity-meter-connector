@@ -1,3 +1,9 @@
+import os, sys, inspect
+import_path = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile(inspect.currentframe()))[0],"connector_client")))
+if import_path not in sys.path:
+    sys.path.insert(0, import_path)
+
+
 try:
     from logger import root_logger
     from modules.singleton import Singleton
@@ -52,7 +58,6 @@ class DevicesDatabase(metaclass=Singleton):
             logger.debug("found database at '{}'".format(__class__._db_path))
 
     def _executeQuery(self, query):
-        logger.info(query)
         try:
             db_conn = sqlite3.connect(__class__._db_path)
             db_conn.row_factory = sqlite3.Row
@@ -78,16 +83,12 @@ class DevicesDatabase(metaclass=Singleton):
         return self._executeQuery(query)
 
     def getDeviceConf(self, device_id):
-        #firstElement = lambda li : [sublist[0] for sublist in li]
-        #columns = ', '.join(map(str, firstElement(__class__._devices_col)[1:]))
         query = 'SELECT * FROM {table} WHERE {id}="{id_v}"'.format(
-            #col=columns,
             table=__class__._devices_table,
             id=__class__._devices_col[0][0],
             id_v=device_id
         )
         result = self._executeQuery(query)
-        logger.info(result)
         if result:
             r_dict = dict()
             for key in result.keys():
@@ -99,10 +100,14 @@ class DevicesDatabase(metaclass=Singleton):
         firstElement = lambda li: [sublist[0] for sublist in li]
         columns = firstElement(__class__._devices_col)
         values = list()
-        for arg in kwargs:
+        for arg, val in kwargs.items():
             if arg in columns:
-                values.append('{}={}'.format(arg, kwargs[arg]))
+                if type(val) in (str, float):
+                    values.append('{}="{}"'.format(arg, val))
+                else:
+                    values.append('{}={}'.format(arg, val))
         values = ', '.join(map(str, values))
+        logger.info(values)
         if values:
             query = 'UPDATE {table} SET {values} WHERE {id}="{id_v}"'.format(
                 table=__class__._devices_table,
@@ -120,5 +125,5 @@ class DevicesDatabase(metaclass=Singleton):
         )
         result = self._executeQuery(query)
         if result:
-            return result['id']
+            return result[__class__._sm_conf_col[0][0]]
         return None
