@@ -58,7 +58,7 @@ class WebGUI(Thread):
                     controller.readSensor()
                     return Response(status=200)
                 if end_point == "fe":
-                    controller.findExtrema()
+                    controller.findEdges()
                     return Response(status=200)
                 if end_point == "dbg":
                     controller.startDebug()
@@ -70,10 +70,10 @@ class WebGUI(Thread):
                     controller.stopAction()
                     return Response(status=200)
                 if end_point == "eas":
-                    controller.enableAutoStart()
+                    controller.setAutoStart(1)
                     return Response(status=200)
                 if end_point == "das":
-                    controller.disableAutoStart()
+                    controller.setAutoStart(0)
                     return Response(status=200)
                 if end_point == "res":
                     controller.haltController()
