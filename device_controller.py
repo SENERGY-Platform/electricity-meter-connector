@@ -32,32 +32,50 @@ class DeviceController(Thread):
     def __init__(self, serial_con, dip_id, callbk):
         super().__init__()
         self._serial_con = serial_con
-        self._dip_id = dip_id
+        self._id = dip_id
         self._callbk = callbk
         self._commands = Queue()
-        self._serial_logger = serial_logger.getChild(self._dip_id)
-        self.log_file = os.path.join(os.path.dirname(__file__), '{}/{}.log'.format(devices_path, self._dip_id))
+        self._serial_logger = serial_logger.getChild(self._id)
+        self.log_file = os.path.join(os.path.dirname(__file__), '{}/{}.log'.format(devices_path, self._id))
         if not self._serial_logger.hasHandlers():
             log_handler = logging.FileHandler(self.log_file)
             log_handler.setFormatter(logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%m.%d.%Y %I:%M:%S %p'))
             self._serial_logger.addHandler(log_handler)
-        self._nat = 0
-        self._dt = 0
-        self._ndt = 0
-        self._lld = 0
-        self._strt = 0
-        self._rpkwh = 0
-        self._kWh = 0.0
-        self._sensor_name = str()
         if self._loadDeviceInfo():
-            if not self._sensor_name:
-                self._sensor_name = "Ferraris Sensor ({})".format(self._dip_id)
-            self._device = Device("{}-{}".format(self._dip_id, ID_PREFIX), "iot#fd0e1327-d713-41da-adfb-e3853a71db3b", self._sensor_name)
+            if not self._meter_name:
+                self._meter_name = "Ferraris Sensor ({})".format(self._id)
+            self._device = Device("{}-{}".format(self._id, ID_PREFIX), "iot#fd0e1327-d713-41da-adfb-e3853a71db3b", self._meter_name)
             self._device.addTag("type1", "Ferraris Meter")
             self._device.addTag("type2", "Optical Sensor")
             self.start()
         else:
             self._callbk(self._serial_con.port)
+
+    def _loadDeviceInfo(self):
+        conf = devices_db.getDeviceConf(self._id)
+        if not conf:
+            logger.warning("no configuration found for device '{}'".format(self._id))
+            if devices_db.addDevice(self._id):
+                logger.info("created configuration for device '{}'".format(self._id))
+                conf = devices_db.getDeviceConf(self._id)
+            else:
+                logger.error("could not create configuration for device '{}'".format(self._id))
+        if conf:
+            self._nat = conf['nat']
+            self._lld = conf['lld']
+            self._lb = conf['lb']
+            self._rb = conf['rb']
+            self._dt = conf['dt']
+            self._ndt = conf['ndt']
+            self._strt = conf['strt']
+            self._rpkwh = conf['rpkwh']
+            self._kwh = float(conf['kwh'])
+            self._meter_name = conf['name']
+            self._mode = conf['mode']
+            logger.info("loaded configuration for device '{}'".format(self._id))
+            return True
+        logger.error("could not load configuration for device '{}'".format(self._id))
+        return False
 
     def _writeToOutput(self, data, src=None):
         if type(data) is not str:
@@ -80,101 +98,144 @@ class DeviceController(Thread):
             logger.error(ex)
         return None
 
-    def _loadDeviceInfo(self):
-        conf = devices_db.getDeviceConf(self._dip_id)
-        if not conf:
-            logger.warning("no configuration found for device '{}'".format(self._dip_id))
-            if devices_db.addDevice(self._dip_id):
-                logger.info("created configuration for device '{}'".format(self._dip_id))
-                conf = devices_db.getDeviceConf(self._dip_id)
-            else:
-                logger.error("could not create configuration for device '{}'".format(self._dip_id))
-        if conf:
-            self._setDeviceInfo(conf)
-            logger.info("loaded configuration for device '{}'".format(self._dip_id))
-            return True
-        logger.error("could not load configuration for device '{}'".format(self._dip_id))
-        return False
+    def _closeConnection(self):
+        self._serial_con.close()
+        self._writeToOutput('serial connection closed')
+        self._callbk(self._serial_con.port)
 
-    def _setDeviceInfo(self, conf):
-        self._nat = conf['nat']
-        self._dt = conf['dt']
-        self._ndt = conf['ndt']
-        self._lld = conf['lld']
-        self._rpkwh = conf['rpkwh']
-        self._strt = conf['strt']
-        self._kWh = float(conf['kWh'])
-        self._sensor_name = conf['name']
+    def run(self):
+        logger.debug("starting serial controller for device '{}'".format(self._id))
+        self._writeToOutput('serial connection open')
+        if self._waitFor('RDY'):
+            self._writeToOutput('RDY', 'D')
+            logger.info("started serial controller for device '{}'".format(self._id))
+            if self._configureDevice(self._nat, self._dt, self._ndt, self._lld, True):
+                try:
+                    Client.add(self._device)
+                except AttributeError:
+                    DevicePool.add(self._device)
+                if self._strt:
+                    self.startDetection()
+                while True:
+                    try:
+                        command = self._commands.get(timeout=1)
+                        if command != self._stopAction:
+                            command()
+                    except Empty:
+                        pass
+                    except __class__.Interrupt:
+                        break
+        else:
+            logger.error("device '{}' not ready".format(self._id))
+        self._closeConnection()
+        try:
+            Client.disconnect(self._device)
+        except AttributeError:
+            DevicePool.remove(self._device)
+        logger.info("serial controller for device '{}' exited".format(self._id))
+
+    class Interrupt(Exception):
+        pass
+
+
+    #---------- getters and setters ----------#
 
     def getConf(self):
         return {
             'nat': self._nat,
+            'lld': self._lld,
+            'lb': self._lb,
+            'rb': self._rb,
             'dt': self._dt,
             'ndt': self._ndt,
-            'lld': self._lld,
-            'rpkwh': self._rpkwh,
+            'rpkwh': self._rpkwh
         }
+
+    def getSettings(self):
+        return {
+            'strt': self._strt,
+            'tkwh': self._kwh,
+            'name': self._meter_name,
+            'mode': self._mode
+        }
+
+    def setRotPerKwh(self, rpkwh):
+        self._commands.put(functools.partial(self._setRotPerKwh, rpkwh))
+
+    def _setRotPerKwh(self, rpkwh):
+        self._rpkwh = rpkwh
+        devices_db.updateDeviceConf(self._id, rpkwh=self._rpkwh)
+
+    def setKwh(self, kwh):
+        if type(kwh) is str:
+            kwh = kwh.replace(',', '.')
+        self._kwh = float(kwh)
+        devices_db.updateDeviceConf(self._id, kwh=self._kwh)
+
+    def _calcAndWriteTotal(self, kwh):
+        self._kwh = self._kwh + kwh
+        devices_db.updateDeviceConf(self._id, kwh=str(self._kwh))
+
+    def setName(self, name):
+        if not self._meter_name == str(name):
+            self._meter_name = str(name)
+            self._device.name = self._meter_name
+            devices_db.updateDeviceConf(self._id, name=self._meter_name)
+            Client.update(self._device)
+
+    def setMode(self, mode):
+        self._mode = str(mode)
+        devices_db.updateDeviceConf(self._id, mode=self._mode)
+
+    def setAutoStart(self, option):
+        if devices_db.updateDeviceConf(self._id, strt=option):
+            self._strt = option
+
+
+    #---------- commands ----------#
 
     def configureDevice(self, nat, dt, ndt, lld):
         self._commands.put(functools.partial(self._configureDevice, nat, dt, ndt, lld))
 
-    def _configureDevice(self, nat, dt, ndt, lld, init=False):
-        devices_db.updateDeviceConf(self._dip_id, nat=nat, dt=dt, lld=lld)
-        self._nat = nat
+    def _configureDevice(self, conf_a, conf_b, dt, ndt, init=False):
+        #LB:RB:DT:NDT
+        #NAT:LLD:DT:NDT
+        if self._mode == 'H':
+            self._lb = conf_a
+            self._rb = conf_b
+            devices_db.updateDeviceConf(self._id, lb=self._lb, rb=self._rb)
+        else:
+            self._nat = conf_a
+            self._lld = conf_b
+            devices_db.updateDeviceConf(self._id, nat=self._nat, lld=self._lld)
         self._dt = dt
         self._ndt = ndt
-        self._lld = lld
+        devices_db.updateDeviceConf(self._id, dt=self._dt, ndt=self._ndt)
         try:
-            self._serial_con.write(b'CONF\n')
-            self._writeToOutput('CONF', 'C')
-            if self._waitFor('NAT:DT:NDT:LLD'):
-                self._writeToOutput('NAT:DT:NDT:LLD', 'D')
-                conf = '{}:{}:{}:{}\n'.format(nat, dt, ndt, lld)
+            self._serial_con.write('CONF{}\n'.format(self._mode).encode())
+            self._writeToOutput('CONF{}'.format(self._mode), 'C')
+            msg = self._waitFor(':')
+            if msg:
+                self._writeToOutput(msg, 'D')
+                conf = '{}:{}:{}:{}\n'.format(conf_a, conf_b, self._dt, self._ndt)
                 self._serial_con.write(conf.encode())
                 self._writeToOutput(conf, 'C')
                 resp = self._waitFor(':')
                 self._writeToOutput(resp, 'D')
                 if self._waitFor('RDY'):
                     self._writeToOutput('RDY', 'D')
-                    logger.info("configured device {}".format(self._dip_id))
+                    logger.info("configured device {}".format(self._id))
                     return True
                 else:
-                    logger.error("device '{}' not ready".format(self._dip_id))
+                    logger.error("device '{}' not ready".format(self._id))
             else:
-                logger.error("device '{}' did not enter configuration mode".format(self._dip_id))
+                logger.error("device '{}' did not enter configuration mode".format(self._id))
         except (SerialException, SerialTimeoutException) as ex:
             logger.error(ex)
         if init:
             return False
         else:
             raise __class__.Interrupt
-
-    def setRotPerKwh(self, rpkwh):
-        self._commands.put(functools.partial(self._setRotPerKwh, rpkwh))
-
-    def _setRotPerKwh(self, rpkwh):
-        devices_db.updateDeviceConf(self._dip_id, rpkwh=rpkwh)
-        self._rpkwh = rpkwh
-
-    def setKwh(self, kwh):
-        if type(kwh) is str:
-            kwh = kwh.replace(',', '.')
-        devices_db.updateDeviceConf(self._dip_id, kWh=str(kwh))
-        self._kWh = float(kwh)
-
-    def setName(self, name):
-        if not self._sensor_name == str(name):
-            self._sensor_name = str(name)
-            devices_db.updateDeviceConf(self._dip_id, name=self._sensor_name)
-            self._device.name = self._sensor_name
-            Client.update(self._device)
-
-    def getSettings(self):
-        return {
-            'strt': self._strt,
-            'tkwh': self._kWh,
-            'name': self._sensor_name
-        }
 
     def readSensor(self):
         self._commands.put(self._readSensor)
@@ -202,10 +263,10 @@ class DeviceController(Thread):
             logger.error(ex)
         raise __class__.Interrupt
 
-    def findExtrema(self):
-        self._commands.put(self._findExtrema)
+    def findEdges(self):
+        self._commands.put(self._findEdges)
 
-    def _findExtrema(self):
+    def _findEdges(self):
         try:
             self._serial_con.write(b'FE\n')
             self._writeToOutput('FE', 'C')
@@ -241,10 +302,6 @@ class DeviceController(Thread):
         except SerialTimeoutException:
             return False
 
-    def _calcAndWriteTotal(self, kwh):
-        self._kWh = self._kWh + kwh
-        devices_db.updateDeviceConf(self._dip_id, kWh=str(self._kWh))
-
     def startDetection(self):
         self._commands.put(self._startDetection)
 
@@ -260,10 +317,10 @@ class DeviceController(Thread):
                     if 'DET' in msg.decode():
                         self._calcAndWriteTotal(kWh)
                         Client.event(
-                            "{}-{}".format(self._dip_id, ID_PREFIX),
+                            "{}-{}".format(self._id, ID_PREFIX),
                             'detection',
                             json.dumps({
-                                'value': self._kWh,
+                                'value': self._kwh,
                                 'unit': 'kWh',
                                 'time': datetime.datetime.now().isoformat()
                             }),
@@ -286,7 +343,7 @@ class DeviceController(Thread):
                 logger.error(ex)
             raise __class__.Interrupt
         else:
-            logger.warning("detection for device '{}' failed - rounds/kWh not set".format(self._dip_id))
+            logger.warning("detection for device '{}' failed - rounds/kWh not set".format(self._id))
             self._writeToOutput('rotations/kWh not set')
 
     def startDebug(self):
@@ -314,58 +371,11 @@ class DeviceController(Thread):
                 logger.error(ex)
             raise __class__.Interrupt
         else:
-            logger.warning("debug for device '{}' failed - rounds/kWh not set".format(self._dip_id))
+            logger.warning("debug for device '{}' failed - rounds/kWh not set".format(self._id))
             self._writeToOutput('rotations/kWh not set')
-
-    def enableAutoStart(self):
-        if devices_db.updateDeviceConf(self._dip_id, strt=1):
-            self._strt = 1
-
-    def disableAutoStart(self):
-        if devices_db.updateDeviceConf(self._dip_id, strt=0):
-            self._strt = 0
 
     def haltController(self):
         self._commands.put(self._haltController)
 
     def _haltController(self):
         raise __class__.Interrupt
-
-    def _closeConnection(self):
-        self._serial_con.close()
-        self._writeToOutput('serial connection closed')
-        self._callbk(self._serial_con.port)
-
-    def run(self):
-        logger.debug("starting serial controller for device '{}'".format(self._dip_id))
-        self._writeToOutput('serial connection open')
-        if self._waitFor('RDY'):
-            self._writeToOutput('RDY', 'D')
-            logger.info("started serial controller for device '{}'".format(self._dip_id))
-            if self._configureDevice(self._nat, self._dt, self._ndt, self._lld, True):
-                try:
-                    Client.add(self._device)
-                except AttributeError:
-                    DevicePool.add(self._device)
-                if self._strt:
-                    self.startDetection()
-                while True:
-                    try:
-                        command = self._commands.get(timeout=1)
-                        if command != self._stopAction:
-                            command()
-                    except Empty:
-                        pass
-                    except __class__.Interrupt:
-                        break
-        else:
-            logger.error("device '{}' not ready".format(self._dip_id))
-        self._closeConnection()
-        try:
-            Client.disconnect(self._device)
-        except AttributeError:
-            DevicePool.remove(self._device)
-        logger.info("serial controller for device '{}' exited".format(self._dip_id))
-
-    class Interrupt(Exception):
-        pass
