@@ -125,13 +125,13 @@ class DeviceController(Thread):
                         pass
                     except __class__.Interrupt:
                         break
+                try:
+                    Client.disconnect(self._device)
+                except AttributeError:
+                    DevicePool.remove(self._device)
         else:
             logger.error("device '{}' not ready".format(self._id))
         self._closeConnection()
-        try:
-            Client.disconnect(self._device)
-        except AttributeError:
-            DevicePool.remove(self._device)
         logger.info("serial controller for device '{}' exited".format(self._id))
 
     class Interrupt(Exception):
