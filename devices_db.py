@@ -1,9 +1,3 @@
-import os, sys, inspect
-import_path = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile(inspect.currentframe()))[0],"connector_client")))
-if import_path not in sys.path:
-    sys.path.insert(0, import_path)
-
-
 try:
     from logger import root_logger
     from modules.singleton import Singleton
@@ -57,7 +51,7 @@ class DevicesDatabase(metaclass=Singleton):
         else:
             logger.debug("found database at '{}'".format(__class__._db_path))
 
-    def _executeQuery(self, query):
+    def _executeQuery(self, query) -> sqlite3.Row:
         try:
             db_conn = sqlite3.connect(__class__._db_path)
             db_conn.row_factory = sqlite3.Row
