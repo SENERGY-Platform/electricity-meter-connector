@@ -109,7 +109,13 @@ class DeviceController(Thread):
         if self._waitFor('RDY'):
             self._writeSerialLog('RDY', 'D')
             logger.info("started serial controller for device '{}'".format(self._id))
-            if self._configureDevice(self._nat, self._dt, self._ndt, self._lld, True):
+            if self._mode == 'H':
+                conf_a = self._lb
+                conf_b = self._rb
+            else:
+                conf_a = self._nat
+                conf_b = self._lld
+            if self._configureDevice(conf_a, conf_b, self._dt, self._ndt, True):
                 try:
                     Client.add(self._device)
                 except AttributeError:
@@ -194,8 +200,8 @@ class DeviceController(Thread):
 
     #---------- commands ----------#
 
-    def configureDevice(self, nat, dt, ndt, lld):
-        self._commands.put(functools.partial(self._configureDevice, nat, dt, ndt, lld))
+    def configureDevice(self, conf_a, conf_b, dt, ndt):
+        self._commands.put(functools.partial(self._configureDevice, conf_a, conf_b, dt, ndt))
 
     def _configureDevice(self, conf_a, conf_b, dt, ndt, init=False):
         #LB:RB:DT:NDT
