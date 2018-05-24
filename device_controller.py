@@ -77,7 +77,7 @@ class DeviceController(Thread):
         logger.error("could not load configuration for device '{}'".format(self._id))
         return False
 
-    def _writeToOutput(self, data, src=None):
+    def _writeSerialLog(self, data, src=None):
         if type(data) is not str:
             data = data.decode()
         data = data.replace('\n', '').replace('\r', '')
@@ -100,14 +100,14 @@ class DeviceController(Thread):
 
     def _closeConnection(self):
         self._serial_con.close()
-        self._writeToOutput('serial connection closed')
+        self._writeSerialLog('serial connection closed')
         self._callbk(self._serial_con.port)
 
     def run(self):
         logger.debug("starting serial controller for device '{}'".format(self._id))
-        self._writeToOutput('serial connection open')
+        self._writeSerialLog('serial connection open')
         if self._waitFor('RDY'):
-            self._writeToOutput('RDY', 'D')
+            self._writeSerialLog('RDY', 'D')
             logger.info("started serial controller for device '{}'".format(self._id))
             if self._configureDevice(self._nat, self._dt, self._ndt, self._lld, True):
                 try:
@@ -213,17 +213,17 @@ class DeviceController(Thread):
         devices_db.updateDeviceConf(self._id, dt=self._dt, ndt=self._ndt)
         try:
             self._serial_con.write('CONF{}\n'.format(self._mode).encode())
-            self._writeToOutput('CONF{}'.format(self._mode), 'C')
+            self._writeSerialLog('CONF{}'.format(self._mode), 'C')
             msg = self._waitFor(':')
             if msg:
-                self._writeToOutput(msg, 'D')
+                self._writeSerialLog(msg, 'D')
                 conf = '{}:{}:{}:{}\n'.format(conf_a, conf_b, self._dt, self._ndt)
                 self._serial_con.write(conf.encode())
-                self._writeToOutput(conf, 'C')
+                self._writeSerialLog(conf, 'C')
                 resp = self._waitFor(':')
-                self._writeToOutput(resp, 'D')
+                self._writeSerialLog(resp, 'D')
                 if self._waitFor('RDY'):
-                    self._writeToOutput('RDY', 'D')
+                    self._writeSerialLog('RDY', 'D')
                     logger.info("configured device {}".format(self._id))
                     return True
                 else:
@@ -243,11 +243,11 @@ class DeviceController(Thread):
     def _readSensor(self):
         try:
             self._serial_con.write(b'MR\n')
-            self._writeToOutput('MR', 'C')
+            self._writeSerialLog('MR', 'C')
             while True:
                 msg = self._serial_con.readline()
                 if msg:
-                    self._writeToOutput(msg, 'D')
+                    self._writeSerialLog(msg, 'D')
                 try:
                     command = self._commands.get_nowait()
                     if command == self._stopAction:
@@ -256,7 +256,7 @@ class DeviceController(Thread):
                         else:
                             break
                     else:
-                        self._writeToOutput('busy - operation not possible')
+                        self._writeSerialLog('busy - operation not possible')
                 except Empty:
                     pass
         except (SerialException, SerialTimeoutException) as ex:
@@ -269,11 +269,11 @@ class DeviceController(Thread):
     def _findEdges(self):
         try:
             self._serial_con.write(b'FE\n')
-            self._writeToOutput('FE', 'C')
+            self._writeSerialLog('FE', 'C')
             while True:
                 msg = self._serial_con.readline()
                 if msg:
-                    self._writeToOutput(msg, 'D')
+                    self._writeSerialLog(msg, 'D')
                 try:
                     command = self._commands.get_nowait()
                     if command == self._stopAction:
@@ -282,7 +282,7 @@ class DeviceController(Thread):
                         else:
                             break
                     else:
-                        self._writeToOutput('busy - operation not possible')
+                        self._writeSerialLog('busy - operation not possible')
                 except Empty:
                     pass
         except (SerialException, SerialTimeoutException) as ex:
@@ -295,9 +295,9 @@ class DeviceController(Thread):
     def _stopAction(self):
         try:
             self._serial_con.write(b'STP\n')
-            self._writeToOutput('STP', 'C')
+            self._writeSerialLog('STP', 'C')
             if self._waitFor('RDY'):
-                self._writeToOutput('RDY', 'D')
+                self._writeSerialLog('RDY', 'D')
                 return True
         except SerialTimeoutException:
             return False
@@ -311,7 +311,7 @@ class DeviceController(Thread):
             kWh = ws / 3600000
             try:
                 self._serial_con.write(b'STRT\n')
-                self._writeToOutput('STRT', 'C')
+                self._writeSerialLog('STRT', 'C')
                 while True:
                     msg = self._serial_con.readline()
                     if 'DET' in msg.decode():
@@ -327,7 +327,7 @@ class DeviceController(Thread):
                             block=False
                         )
                     elif 'CAL' in msg.decode():
-                        self._writeToOutput('CAL', 'D')
+                        self._writeSerialLog('CAL', 'D')
                     try:
                         command = self._commands.get_nowait()
                         if command == self._stopAction:
@@ -336,7 +336,7 @@ class DeviceController(Thread):
                             else:
                                 break
                         else:
-                            self._writeToOutput('busy - operation not possible')
+                            self._writeSerialLog('busy - operation not possible')
                     except Empty:
                         pass
             except (SerialException, SerialTimeoutException) as ex:
@@ -344,7 +344,7 @@ class DeviceController(Thread):
             raise __class__.Interrupt
         else:
             logger.warning("detection for device '{}' failed - rounds/kWh not set".format(self._id))
-            self._writeToOutput('rotations/kWh not set')
+            self._writeSerialLog('rotations/kWh not set')
 
     def startDebug(self):
         self._commands.put(self._startDebug)
@@ -353,11 +353,11 @@ class DeviceController(Thread):
         if int(self._rpkwh) > 0:
             try:
                 self._serial_con.write(b'STRT\n')
-                self._writeToOutput('STRT', 'C')
+                self._writeSerialLog('STRT', 'C')
                 while True:
                     msg = self._serial_con.readline()
                     if msg.decode() != '':
-                        self._writeToOutput(msg, 'D')
+                        self._writeSerialLog(msg, 'D')
                     try:
                         command = self._commands.get_nowait()
                         if command == self._stopAction:
@@ -372,7 +372,7 @@ class DeviceController(Thread):
             raise __class__.Interrupt
         else:
             logger.warning("debug for device '{}' failed - rounds/kWh not set".format(self._id))
-            self._writeToOutput('rotations/kWh not set')
+            self._writeSerialLog('rotations/kWh not set')
 
     def haltController(self):
         self._commands.put(self._haltController)
