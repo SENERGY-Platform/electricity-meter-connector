@@ -79,13 +79,13 @@ class SerialManager(SimpleSingleton, Thread):
     @staticmethod
     def getController(dip_id) -> DeviceController:
         for controller in __class__.__port_controller_map.values():
-            if dip_id == controller._dip_id:
+            if dip_id == controller._id:
                 return controller
 
     @staticmethod
     def getDevices() -> list:
         try:
-            return [val._dip_id for val in __class__.__port_controller_map.values()]
+            return [val._id for val in __class__.__port_controller_map.values()]
         except IndexError:
             pass
         return list()
