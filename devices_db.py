@@ -101,7 +101,6 @@ class DevicesDatabase(metaclass=Singleton):
                 else:
                     values.append('{}={}'.format(arg, val))
         values = ', '.join(map(str, values))
-        logger.info(values)
         if values:
             query = 'UPDATE {table} SET {values} WHERE {id}="{id_v}"'.format(
                 table=__class__._devices_table,
