@@ -1,15 +1,21 @@
 "use strict";
 
-let conf_modal;
 let settings_modal;
+let conf_modal;
+let mode_a_conf;
+let mode_i_conf;
+let mode_toggle;
+let lb;
+let rb;
 let nat;
+let lld;
 let dt;
 let ndt;
-let lld;
 let rpkwh;
 let astrt;
 let tkwh;
 let device_id;
+let device_mode;
 let name;
 let ws_console;
 let title;
@@ -17,10 +23,15 @@ let title;
 window.addEventListener("DOMContentLoaded", function (e) {
     settings_modal = document.getElementById('modal');
     conf_modal = document.getElementsByClassName('modal-content2')[0];
+    mode_a_conf = document.getElementById("mode_a");
+    mode_i_conf = document.getElementById("mode_i");
+    mode_toggle = document.getElementById("mode_toggle");
+    lb = document.getElementById("lb");
+    rb = document.getElementById("rb");
     nat = document.getElementById("nat");
+    lld = document.getElementById("lld");
     dt = document.getElementById("dt");
     ndt = document.getElementById("ndt");
-    lld = document.getElementById("lld");
     rpkwh = document.getElementById("rpkwh");
     astrt = document.getElementById("astrt");
     tkwh = document.getElementById("tkwh");
@@ -130,11 +141,12 @@ async function getConf(device) {
     });
     if (result !== 'timeout' && result !== undefined) {
         let conf = JSON.parse(result);
-        nat.value = conf.nat;
+        nat.value = conf.conf_a;
+        lld.value = conf.conf_b;
+        lb.value = conf.conf_a;
+        rb.value = conf.conf_b;
         dt.value = conf.dt;
         ndt.value = conf.ndt;
-        lld.value = conf.lld;
-        rpkwh.value = conf.rpkwh;
         return true
     }
     return false
@@ -146,13 +158,24 @@ async function getSettings(device) {
     });
     if (result !== 'timeout' && result !== undefined) {
         let conf = JSON.parse(result);
+        device_mode = conf.mode;
         tkwh.value = conf.tkwh;
+        rpkwh.value = conf.rpkwh;
         name.value = conf.name;
         title.innerHTML = conf.name;
         if (conf.strt === 0){
             astrt.checked = false;
         } else if (conf.strt === 1) {
             astrt.checked = true;
+        }
+        if (device_mode === "I"){
+            mode_toggle.checked = false;
+            mode_i_conf.style.display = "block";
+            mode_a_conf.style.display = "none";
+        } else if (device_mode === "A") {
+            mode_toggle.checked = true;
+            mode_a_conf.style.display = "block";
+            mode_i_conf.style.display = "none";
         }
         return true
     }
@@ -182,12 +205,20 @@ function toggleConfModal() {
 function submitConf(device=device_id) {
     //let test = nat.checkValidity() && dt.checkValidity() && lld.checkValidity() && rpkwh.checkValidity() && tkwh.checkValidity();
     //console.log(test);
+    let conf_a;
+    let conf_b;
+    if (device_mode === "I"){
+        conf_a = lb.value;
+        conf_b = rb.value;
+    } else if (device_mode === "A") {
+        conf_a = nat.value;
+        conf_b = lld.value;
+    }
     let data = JSON.stringify({
-        nat: nat.value,
+        conf_a: conf_a,
+        conf_b: conf_b,
         dt: dt.value,
-        ndt: ndt.value,
-        lld: lld.value,
-        rpkwh: rpkwh.value
+        ndt: ndt.value
     });
     httpPost(device + "/conf", ["Content-type", "application/json"], data);
     toggleConfModal();
@@ -196,9 +227,17 @@ function submitConf(device=device_id) {
 function submitSettings(device=device_id) {
     //let test = nat.checkValidity() && dt.checkValidity() && lld.checkValidity() && rpkwh.checkValidity() && tkwh.checkValidity();
     //console.log(test);
+    let mode;
+    if (mode_toggle.checked === false) {
+        mode = "I";
+    } else {
+        mode = "A";
+    }
     let data = JSON.stringify({
         tkwh: tkwh.value,
-        name: name.value
+        name: name.value,
+        mode: mode,
+        rpkwh: rpkwh.value
     });
     httpPost(device + "/sett", ["Content-type", "application/json"], data);
     toggleSettingsModal();

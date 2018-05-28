@@ -293,7 +293,7 @@ input[type=submit]:hover {
     position: relative;
     background-color: #efefef;
     margin: auto; /* 15% from the top and centered */
-    margin-top: -344px;
+    margin-top: -536px;
     padding: 20px;
     width: 448px; /* Could be more or less, depending on screen size */
     font-size: 16px;
@@ -302,7 +302,19 @@ input[type=submit]:hover {
     z-index: 7;
 }
 
+#mode_a {
+    display: none;
+}
+
+#mode_i {
+    display: none;
+}
+
 #conf_btn {
+    width: 444px;
+}
+
+#cal_btn {
     width: 444px;
 }
 
@@ -397,4 +409,49 @@ input[type=submit]:hover {
     -webkit-transform: rotate(45deg);
     -ms-transform: rotate(45deg);
     transform: rotate(45deg);
+}
+
+
+.toggle {
+    -webkit-appearance: none;
+    width: 444px;
+    height: 50px;
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    outline: none;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
+    background-color: white;
+    margin: 4px 2px;
+}
+
+.toggle:before {
+  content: "Average Interval";
+  display: block;
+  position: absolute;
+  z-index: 2;
+  width: 215px;
+  height: 40px;
+  background: gainsboro;
+  left: 5px;
+  top: 5px;
+  font: 16px/42px Arial, sans-serif;
+  text-indent: -142px;
+  word-spacing: 381px;
+  color: black;
+  white-space: nowrap;
+
+  transition: 0.3s;
+}
+
+.toggle:hover:before {
+    background: #3e8e41;
+}
+
+.toggle:checked:before {
+  left: 224px;
 }

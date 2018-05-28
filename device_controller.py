@@ -46,8 +46,6 @@ class DeviceController(Thread):
             log_handler.setFormatter(logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%m.%d.%Y %I:%M:%S %p'))
             self._serial_logger.addHandler(log_handler)
         if self._loadDeviceInfo():
-            if not self._meter_name:
-                self._meter_name = "Ferraris Sensor ({})".format(self._id)
             self._device = Device("{}-{}".format(self._id, ID_PREFIX), "iot#fd0e1327-d713-41da-adfb-e3853a71db3b", self._meter_name)
             self._device.addTag("type1", "Ferraris Meter")
             self._device.addTag("type2", "Optical Sensor")
@@ -78,6 +76,8 @@ class DeviceController(Thread):
             self._rpkwh = conf['rpkwh']
             self._kwh = float(conf['kwh'])
             self._meter_name = conf['name']
+            if not self._meter_name:
+                self._meter_name = "Ferraris Sensor ({})".format(self._id)
             logger.info("loaded configuration for device '{}'".format(self._id))
             return True
         logger.error("could not load configuration for device '{}'".format(self._id))
@@ -152,21 +152,18 @@ class DeviceController(Thread):
             'conf_b': self._conf_b,
             'dt': self._dt,
             'ndt': self._ndt,
-            'rpkwh': self._rpkwh
         }
 
     def getSettings(self):
         return {
             'strt': self._strt,
+            'rpkwh': self._rpkwh,
             'tkwh': self._kwh,
             'name': self._meter_name,
             'mode': self._mode.value
         }
 
     def setRotPerKwh(self, rpkwh):
-        self._commands.put(functools.partial(self._setRotPerKwh, rpkwh))
-
-    def _setRotPerKwh(self, rpkwh):
         self._rpkwh = rpkwh
         devices_db.updateDeviceConf(self._id, rpkwh=self._rpkwh)
 
@@ -188,8 +185,13 @@ class DeviceController(Thread):
             Client.update(self._device)
 
     def setMode(self, mode):
-        self._mode = Mode(str(mode))
-        devices_db.updateDeviceConf(self._id, mode=self._mode.value)
+        if Mode(str(mode)) != self._mode:
+            self._mode = Mode(str(mode))
+            devices_db.updateDeviceConf(self._id, mode=self._mode.value)
+            logger.info("changed mode for device {}".format(self._id))
+            self._loadDeviceInfo()
+            self.stopAction()
+            self._commands.put(functools.partial(self._configureDevice, init=True))
 
     def setAutoStart(self, option):
         if devices_db.updateDeviceConf(self._id, strt=option):
@@ -214,7 +216,7 @@ class DeviceController(Thread):
             elif self._mode == Mode.average:
                 devices_db.updateDeviceConf(self._id, nat=self._conf_a, lld=self._conf_b, dt=self._dt, ndt=self._ndt)
         try:
-            self._serial_con.write('CONF\n'.encode())
+            self._serial_con.write(b'CONF\n')
             self._writeSerialLog('CONF', 'C')
             msg = self._waitFor(':')
             if msg:
@@ -309,15 +311,15 @@ class DeviceController(Thread):
 
     def _startDetection(self):
         if int(self._rpkwh) > 0:
-            ws = int(3600000 / int(self._rpkwh))
-            kWh = ws / 3600000
+            #ws = int(3600000 / int(self._rpkwh))
+            #kWh = ws / 3600000
             try:
                 self._serial_con.write(b'STRT\n')
                 self._writeSerialLog('STRT', 'C')
                 while True:
                     msg = self._serial_con.readline()
                     if 'DET' in msg.decode():
-                        self._calcAndWriteTotal(kWh)
+                        self._calcAndWriteTotal(1 / int(self._rpkwh))
                         Client.event(
                             "{}-{}".format(self._id, ID_PREFIX),
                             'detection',
@@ -352,29 +354,25 @@ class DeviceController(Thread):
         self._commands.put(self._startDebug)
 
     def _startDebug(self):
-        if int(self._rpkwh) > 0:
-            try:
-                self._serial_con.write(b'STRT\n')
-                self._writeSerialLog('STRT', 'C')
-                while True:
-                    msg = self._serial_con.readline()
-                    if msg.decode() != '':
-                        self._writeSerialLog(msg, 'D')
-                    try:
-                        command = self._commands.get_nowait()
-                        if command == self._stopAction:
-                            if self._stopAction():
-                                return True
-                            else:
-                                break
-                    except Empty:
-                        pass
-            except (SerialException, SerialTimeoutException) as ex:
-                logger.error(ex)
-            raise __class__.Interrupt
-        else:
-            logger.warning("debug for device '{}' failed - rounds/kWh not set".format(self._id))
-            self._writeSerialLog('rotations/kWh not set')
+        try:
+            self._serial_con.write(b'STRT\n')
+            self._writeSerialLog('STRT', 'C')
+            while True:
+                msg = self._serial_con.readline()
+                if msg.decode() != '':
+                    self._writeSerialLog(msg, 'D')
+                try:
+                    command = self._commands.get_nowait()
+                    if command == self._stopAction:
+                        if self._stopAction():
+                            return True
+                        else:
+                            break
+                except Empty:
+                    pass
+        except (SerialException, SerialTimeoutException) as ex:
+            logger.error(ex)
+        raise __class__.Interrupt
 
     def haltController(self):
         self._commands.put(self._haltController)

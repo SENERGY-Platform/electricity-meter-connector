@@ -21,7 +21,9 @@
 	<div class="modal-content">
 		<form id="name_form" action="javascript:" onsubmit="submitSettings();">
 			<label for="name">Name: </label><input id="name" type="text"><br><br>
+			<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="100000" required><br><br>
 			<label for="tkwh">Total kWh: </label><input id="tkwh" type="text" required><br><br>
+			<label for="mode_toggle">Mode: </label><input id="mode_toggle" class="toggle" type="checkbox" /><br><br>
 			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleSettingsModal();">Cancel</button>
 			<button id="conf_btn" class="btn" type="button" onclick="toggleConfModal();">Configure Sensor</button>
 		</form>
@@ -29,11 +31,17 @@
 
 	<div class="modal-content2">
 		<form id="conf_form" action="javascript:" onsubmit="submitConf();">
-			<label for="nat">Average Threshold: </label><input id="nat" type="number" min="0" max="100000" required><br><br>
 			<label for="dt">Positive Detection Threshold: </label><input id="dt" type="number" min="0" max="100000" required><br><br>
 			<label for="ndt">Negative Detection Threshold: </label><input id="ndt" type="number" min="0" max="100000" required><br><br>
-			<label for="lld">Delta: </label><input id="lld" type="number" min="0" max="30000" required><br><br>
-			<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="100000" required><br><br>
+			<div id="mode_a">
+				<label for="nat">Average Threshold: </label><input id="nat" type="number" min="0" max="100000" required><br><br>
+				<label for="lld">Delta: </label><input id="lld" type="number" min="0" max="30000" required><br><br>
+			</div>
+			<div id="mode_i">
+				<label for="lb">Left Boundary: </label><input id="lb" type="number" min="0" max="100000" required><br><br>
+				<label for="rb">Right Boundary: </label><input id="rb" type="number" min="0" max="100000" required><br><br>
+				<button id="cal_btn" class="btn" type="button" onclick="toggleConfModal();">Calibrate Sensor</button>
+			</div>
 			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleConfModal();">Cancel</button>
 		</form>
 	</div>
@@ -54,9 +62,9 @@
 		<button class="btn" type="button" onclick="location.reload();">Refresh Devices</button><br><br>
 		{% for device in devices %}
 		{% if device == d_id %}
-		<button class="btnactive" type="button" onclick="location.href=('{{ device }}');">{{ device }}</button>
+		<button class="btnactive" type="button" onclick="location.href=('{{ device }}');">Device {{ device }}</button>
 		{% else %}
-		<button class="btn" type="button" onclick="location.href=('{{ device }}');">{{ device }}</button>
+		<button class="btn" type="button" onclick="location.href=('{{ device }}');">Device {{ device }}</button>
 		{% endif %}
 		{% endfor %}
 	</div>
