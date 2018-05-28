@@ -24,7 +24,7 @@ class DevicesDatabase(metaclass=Singleton):
         ('rpkwh', 'INTEGER DEFAULT 0'),
         ('kwh', 'TEXT DEFAULT "0.0"'),
         ('name', 'TEXT'),
-        ('mode', 'TEXT DEFAULT "H"')
+        ('mode', 'TEXT DEFAULT "I"')
     ]
     _sm_conf_table = 'sm_conf'
     _sm_conf_col = [

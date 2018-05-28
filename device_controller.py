@@ -29,7 +29,7 @@ devices_db = DevicesDatabase()
 ID_PREFIX = devices_db.getIdPrefix()
 
 class Mode(Enum):
-    interval = 'H'
+    interval = 'I'
     average = 'A'
 
 class DeviceController(Thread):
