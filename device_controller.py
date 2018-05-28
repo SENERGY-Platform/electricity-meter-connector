@@ -66,8 +66,12 @@ class DeviceController(Thread):
                 logger.error("could not create configuration for device '{}'".format(self._id))
         if conf:
             self._mode = Mode(conf['mode'])
-            self._conf_a = conf['conf_a']
-            self._conf_b = conf['conf_b']
+            if self._mode == Mode.interval:
+                self._conf_a = conf['lb']
+                self._conf_b = conf['rb']
+            elif self._mode == Mode.average:
+                self._conf_a = conf['nat']
+                self._conf_b = conf['lld']
             self._dt = conf['dt']
             self._ndt = conf['ndt']
             self._strt = conf['strt']
@@ -207,7 +211,7 @@ class DeviceController(Thread):
             self._ndt = ndt
             if self._mode == Mode.interval:
                 devices_db.updateDeviceConf(self._id, lb=self._conf_a, rb=self._conf_b, dt=self._dt, ndt=self._ndt)
-            else:
+            elif self._mode == Mode.average:
                 devices_db.updateDeviceConf(self._id, nat=self._conf_a, lld=self._conf_b, dt=self._dt, ndt=self._ndt)
         try:
             self._serial_con.write('CONF{}\n'.format(self._mode.value).encode())
