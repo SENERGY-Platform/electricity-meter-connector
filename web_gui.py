@@ -91,7 +91,7 @@ class WebGUI(Thread):
                 if request.method == 'POST':
                     conf = request.get_json()
                     controller.setRotPerKwh(conf['rpkwh'])
-                    controller.configureDevice(conf['nat'], conf['dt'], conf['ndt'], conf['lld'])
+                    controller.setDeviceConf(conf['conf_a'], conf['conf_b'], conf['dt'], conf['ndt'])
                     return Response(status=200)
                 if request.method == 'GET':
                     conf = controller.getConf()

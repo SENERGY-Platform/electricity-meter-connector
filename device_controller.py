@@ -9,6 +9,7 @@ except ImportError as ex:
 from serial import SerialException, SerialTimeoutException
 from threading import Thread
 from queue import Queue, Empty
+from enum import Enum
 import logging, functools, os, inspect, json, datetime
 
 
@@ -27,6 +28,9 @@ serial_logger.setLevel(logging.DEBUG)
 devices_db = DevicesDatabase()
 ID_PREFIX = devices_db.getIdPrefix()
 
+class Mode(Enum):
+    interval = 'H'
+    average = 'A'
 
 class DeviceController(Thread):
     def __init__(self, serial_con, dip_id, callbk):
@@ -61,17 +65,15 @@ class DeviceController(Thread):
             else:
                 logger.error("could not create configuration for device '{}'".format(self._id))
         if conf:
-            self._nat = conf['nat']
-            self._lld = conf['lld']
-            self._lb = conf['lb']
-            self._rb = conf['rb']
+            self._mode = Mode(conf['mode'])
+            self._conf_a = conf['conf_a']
+            self._conf_b = conf['conf_b']
             self._dt = conf['dt']
             self._ndt = conf['ndt']
             self._strt = conf['strt']
             self._rpkwh = conf['rpkwh']
             self._kwh = float(conf['kwh'])
             self._meter_name = conf['name']
-            self._mode = conf['mode']
             logger.info("loaded configuration for device '{}'".format(self._id))
             return True
         logger.error("could not load configuration for device '{}'".format(self._id))
@@ -109,13 +111,7 @@ class DeviceController(Thread):
         if self._waitFor('RDY'):
             self._writeSerialLog('RDY', 'D')
             logger.info("started serial controller for device '{}'".format(self._id))
-            if self._mode == 'H':
-                conf_a = self._lb
-                conf_b = self._rb
-            else:
-                conf_a = self._nat
-                conf_b = self._lld
-            if self._configureDevice(conf_a, conf_b, self._dt, self._ndt, True):
+            if self._configureDevice(init=True):
                 try:
                     Client.add(self._device)
                 except AttributeError:
@@ -148,10 +144,8 @@ class DeviceController(Thread):
 
     def getConf(self):
         return {
-            'nat': self._nat,
-            'lld': self._lld,
-            'lb': self._lb,
-            'rb': self._rb,
+            'conf_a': self._conf_a,
+            'conf_b': self._conf_b,
             'dt': self._dt,
             'ndt': self._ndt,
             'rpkwh': self._rpkwh
@@ -162,7 +156,7 @@ class DeviceController(Thread):
             'strt': self._strt,
             'tkwh': self._kwh,
             'name': self._meter_name,
-            'mode': self._mode
+            'mode': self._mode.value
         }
 
     def setRotPerKwh(self, rpkwh):
@@ -190,40 +184,38 @@ class DeviceController(Thread):
             Client.update(self._device)
 
     def setMode(self, mode):
-        self._mode = str(mode)
-        devices_db.updateDeviceConf(self._id, mode=self._mode)
+        self._mode = Mode(str(mode))
+        devices_db.updateDeviceConf(self._id, mode=self._mode.value)
 
     def setAutoStart(self, option):
         if devices_db.updateDeviceConf(self._id, strt=option):
             self._strt = option
 
+    def setDeviceConf(self, conf_a, conf_b, dt, ndt):
+        self._commands.put(functools.partial(self._configureDevice, conf_a, conf_b, dt, ndt))
+
 
     #---------- commands ----------#
 
-    def configureDevice(self, conf_a, conf_b, dt, ndt):
-        self._commands.put(functools.partial(self._configureDevice, conf_a, conf_b, dt, ndt))
-
-    def _configureDevice(self, conf_a, conf_b, dt, ndt, init=False):
+    def _configureDevice(self, conf_a=None, conf_b=None, dt=None, ndt=None, init=False):
         #LB:RB:DT:NDT
         #NAT:LLD:DT:NDT
-        if self._mode == 'H':
-            self._lb = conf_a
-            self._rb = conf_b
-            devices_db.updateDeviceConf(self._id, lb=self._lb, rb=self._rb)
-        else:
-            self._nat = conf_a
-            self._lld = conf_b
-            devices_db.updateDeviceConf(self._id, nat=self._nat, lld=self._lld)
-        self._dt = dt
-        self._ndt = ndt
-        devices_db.updateDeviceConf(self._id, dt=self._dt, ndt=self._ndt)
+        if not init:
+            self._conf_a = conf_a
+            self._conf_b = conf_b
+            self._dt = dt
+            self._ndt = ndt
+            if self._mode == Mode.interval:
+                devices_db.updateDeviceConf(self._id, lb=self._conf_a, rb=self._conf_b, dt=self._dt, ndt=self._ndt)
+            else:
+                devices_db.updateDeviceConf(self._id, nat=self._conf_a, lld=self._conf_b, dt=self._dt, ndt=self._ndt)
         try:
-            self._serial_con.write('CONF{}\n'.format(self._mode).encode())
-            self._writeSerialLog('CONF{}'.format(self._mode), 'C')
+            self._serial_con.write('CONF{}\n'.format(self._mode.value).encode())
+            self._writeSerialLog('CONF{}'.format(self._mode.value), 'C')
             msg = self._waitFor(':')
             if msg:
                 self._writeSerialLog(msg, 'D')
-                conf = '{}:{}:{}:{}\n'.format(conf_a, conf_b, self._dt, self._ndt)
+                conf = '{}:{}:{}:{}\n'.format(self._conf_a, self._conf_b, self._dt, self._ndt)
                 self._serial_con.write(conf.encode())
                 self._writeSerialLog(conf, 'C')
                 resp = self._waitFor(':')
