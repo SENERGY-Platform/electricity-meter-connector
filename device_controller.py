@@ -214,12 +214,12 @@ class DeviceController(Thread):
             elif self._mode == Mode.average:
                 devices_db.updateDeviceConf(self._id, nat=self._conf_a, lld=self._conf_b, dt=self._dt, ndt=self._ndt)
         try:
-            self._serial_con.write('CONF{}\n'.format(self._mode.value).encode())
-            self._writeSerialLog('CONF{}'.format(self._mode.value), 'C')
+            self._serial_con.write('CONF\n'.encode())
+            self._writeSerialLog('CONF', 'C')
             msg = self._waitFor(':')
             if msg:
                 self._writeSerialLog(msg, 'D')
-                conf = '{}:{}:{}:{}\n'.format(self._conf_a, self._conf_b, self._dt, self._ndt)
+                conf = '{}:{}:{}:{}:{}\n'.format(self._mode.value, self._conf_a, self._conf_b, self._dt, self._ndt)
                 self._serial_con.write(conf.encode())
                 self._writeSerialLog(conf, 'C')
                 resp = self._waitFor(':')
