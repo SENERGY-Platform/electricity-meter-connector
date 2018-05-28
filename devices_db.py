@@ -14,12 +14,12 @@ class DevicesDatabase(metaclass=Singleton):
     _devices_table = 'devices'
     _devices_col = [
         ('id', 'TEXT PRIMARY KEY'),
-        ('nat', 'INTEGER DEFAULT 0'),
+        ('nat', 'INTEGER DEFAULT 9000'),
         ('lld', 'INTEGER DEFAULT 0'),
         ('lb', 'INTEGER DEFAULT 0'),
         ('rb', 'INTEGER DEFAULT 0'),
-        ('dt', 'INTEGER DEFAULT 0'),
-        ('ndt', 'INTEGER DEFAULT 0'),
+        ('dt', 'INTEGER DEFAULT 50'),
+        ('ndt', 'INTEGER DEFAULT 150'),
         ('strt', 'INTEGER DEFAULT 0'),
         ('rpkwh', 'INTEGER DEFAULT 0'),
         ('kwh', 'TEXT DEFAULT "0.0"'),
