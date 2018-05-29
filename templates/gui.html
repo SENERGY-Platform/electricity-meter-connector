@@ -39,10 +39,35 @@
 			<div id="mode_i">
 				<label for="lb">Left Boundary: </label><input id="lb" type="number" min="0" max="100000" required><br><br>
 				<label for="rb">Right Boundary: </label><input id="rb" type="number" min="0" max="100000" required><br><br>
-				<button id="cal_btn" class="btn" type="button" onclick="toggleConfModal();">Calibrate Sensor</button>
+				<button id="cal_btn" class="btn" type="button" onclick="toggleCalModal();">Calibrate Sensor</button>
 			</div>
 			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleConfModal();">Cancel</button>
 		</form>
+	</div>
+</div>
+
+<div id="cal_modal" class="modal">
+	<div class="modal-content2">
+		<div class="diagram_wrapper">
+
+		</div>
+		<div id="loader"></div>
+		<div class="control_wrapper">
+			<div id="control_set_1">
+				<button class="btn" type="button" onclick="startCal();">Start</button>
+				<button class="btn" type="button" onclick="toggleCalModal();">Cancel</button>
+			</div>
+			<div id="control_set_2">
+				<button class="btn" type="button" onclick="updateBoundaries();">Update</button>
+				<button class="btn" type="button" onclick="startHST();">Next</button>
+				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/stp');">Cancel</button>
+			</div>
+			<div id="control_set_3">
+				<button class="btn" type="button" onclick="updateHST();">Update</button>
+				<button class="btn" type="button" onclick="finishCal();">Finish</button>
+				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/stp');">Cancel</button>
+			</div>
+		</div>
 	</div>
 </div>
 

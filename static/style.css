@@ -12,62 +12,62 @@ article, aside, canvas, details, embed,
 figure, figcaption, footer, header, hgroup,
 menu, nav, output, ruby, section, summary,
 time, mark, audio, video {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	font-size: 100%;
-	font: inherit;
-	vertical-align: baseline;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
 }
 /* HTML5 display-role reset for older browsers */
 article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
-	display: block;
+    display: block;
 }
 body {
-	line-height: 1;
+    line-height: 1;
 }
 ol, ul {
-	list-style: none;
+    list-style: none;
 }
 blockquote, q {
-	quotes: none;
+    quotes: none;
 }
 blockquote:before, blockquote:after,
 q:before, q:after {
-	content: '';
-	content: none;
+    content: '';
+    content: none;
 }
 table {
-	border-collapse: collapse;
-	border-spacing: 0;
+    border-collapse: collapse;
+    border-spacing: 0;
 }
 /* End of Eric Meyer's CSS Reset */
 
 html {
-	height: 100%;
+    height: 100%;
 }
 article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary {
-	display: block;
+    display: block;
 }
 body {
-	font: 12px/18px Arial, sans-serif;
-	height: 100%;
+    font: 12px/18px Arial, sans-serif;
+    height: 100%;
     background: #f5f5f5;
 }
 .wrapper {
-	width: 100%;
-	min-width: 1000px;
-	min-height: 100%;
-	height: auto !important;
-	height: 100%;
-	position: relative;
+    width: 100%;
+    min-width: 1000px;
+    min-height: 100%;
+    height: auto !important;
+    height: 100%;
+    position: relative;
 }
 
 .blocker {
     display: none;
     position: absolute;
-	top: 0;
+    top: 0;
     left: 0;
     right: 0;
     bottom: 0;
@@ -79,31 +79,31 @@ body {
 -----------------------------------------------------------------------------*/
 
 .header {
-	position: absolute;
-	top: 0;
+    position: absolute;
+    top: 0;
     left: 0;
     right: 0;
-	padding: 15px;
-	height: 50px;
-	font-size: 36px;
-	color: white;
+    padding: 15px;
+    height: 50px;
+    font-size: 36px;
+    color: white;
     background: #3e8e41;
-	text-align: center;
-	line-height: 50px;
+    text-align: center;
+    line-height: 50px;
     z-index: 5;
     -webkit-box-shadow: 0 3px 7px 0 rgba(0,0,0,0.40);
     box-shadow: 0 3px 7px 0 rgba(0,0,0,0.40);
 }
 
 .main-navigation {
-	position: absolute;
-	top: 80px;
+    position: absolute;
+    top: 80px;
     left: 0;
     bottom: 0;
-	width: 240px;
+    width: 240px;
     padding-left: 15px;
-	padding-top: 15px;
-	padding-bottom: 15px;
+    padding-top: 15px;
+    padding-bottom: 15px;
     overflow-y: scroll;
     z-index: 4;
     background: #efefef;
@@ -113,32 +113,32 @@ body {
 }
 
 .content {
-	position: absolute;
-	top: 99px;
-	left: 275px;
-	right: 255px;
-	bottom: 19px;
+    position: absolute;
+    top: 99px;
+    left: 275px;
+    right: 255px;
+    bottom: 19px;
     z-index: 0;
     background: white;
     min-height: 495px;
 }
 
 .sub-navigation {
-	position: absolute;
-	top: 80px;
+    position: absolute;
+    top: 80px;
     right: 0;
     bottom: 0;
-	width: 238px;
+    width: 238px;
     padding-top: 15px;
-	padding-left: 15px;
+    padding-left: 15px;
     z-index: 1;
 }
 
 #logo {
-	max-width: 70%;
+    max-width: 70%;
     height: 100%;
-	margin: auto;
-	display: block;
+    margin: auto;
+    display: block;
     position: relative;
     z-index: 1;
     vertical-align: middle;
@@ -147,14 +147,14 @@ body {
 #console {
     position: absolute;
     top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     padding: 15px;
-	overflow-y: scroll;
-	border-style: dotted;
-	border-width: 1px;
-	font-size: 16px;
+    overflow-y: scroll;
+    border-style: dotted;
+    border-width: 1px;
+    font-size: 16px;
     font-family: 'Consolas', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
     z-index: 2;
 }
@@ -164,14 +164,14 @@ body {
 -----------------------------------------------------------------------------*/
 
 .btn {
-	width: 220px;
-	border: none;
-	color: black;
-	padding: 16px 32px;
-	text-align: center;
-	font-size: 16px;
-	margin: 4px 2px;
-	transition: 0.3s;
+    width: 220px;
+    border: none;
+    color: black;
+    padding: 16px 32px;
+    text-align: center;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition: 0.3s;
     -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     cursor: pointer;
@@ -180,23 +180,23 @@ body {
 }
 
 .btnactive {
-	background-color: #3e8e41;
-	width: 220px;
-	border: none;
-	color: white;
-	padding: 16px 32px;
-	text-align: center;
-	font-size: 16px;
-	margin: 4px 2px;
-	transition: 0.3s;
+    background-color: #3e8e41;
+    width: 220px;
+    border: none;
+    color: white;
+    padding: 16px 32px;
+    text-align: center;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition: 0.3s;
     -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     outline: none;
 }
 
 .btn:hover {
-	background-color: #3e8e41;
-	color: white;
+    background-color: #3e8e41;
+    color: white;
     -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.5);
     box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.5);
     outline: none;
@@ -206,12 +206,12 @@ input[type=number], select {
     display: inline-block;
     box-sizing: border-box;
     width: 444px;
-	border: none;
-	color: black;
-	padding: 16px 32px;
-	text-align: right;
-	font-size: 16px;
-	margin: 4px 2px;
+    border: none;
+    color: black;
+    padding: 16px 32px;
+    text-align: right;
+    font-size: 16px;
+    margin: 4px 2px;
     -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     -moz-appearance: textfield;
@@ -219,33 +219,33 @@ input[type=number], select {
 
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 input[type=text], select {
     display: inline-block;
     box-sizing: border-box;
     width: 444px;
-	border: none;
-	color: black;
-	padding: 16px 32px;
-	text-align: right;
-	font-size: 16px;
-	margin: 4px 2px;
+    border: none;
+    color: black;
+    padding: 16px 32px;
+    text-align: right;
+    font-size: 16px;
+    margin: 4px 2px;
     -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
 }
 
 input[type=submit] {
     width: 220px;
-	border: none;
-	color: black;
-	padding: 16px 32px;
-	text-align: center;
-	font-size: 16px;
-	margin: 4px 2px;
-	transition: 0.3s;
+    border: none;
+    color: black;
+    padding: 16px 32px;
+    text-align: center;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition: 0.3s;
     -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     cursor: pointer;
@@ -254,7 +254,7 @@ input[type=submit] {
 
 input[type=submit]:hover {
     background-color: #3e8e41;
-	color: white;
+    color: white;
     -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.5);
     box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.5);
 }
@@ -289,17 +289,16 @@ input[type=submit]:hover {
 }
 
 .modal-content2 {
-    display: none;
     position: relative;
     background-color: #efefef;
     margin: auto; /* 15% from the top and centered */
-    margin-top: -536px;
+    margin-top: 80px;
     padding: 20px;
-    width: 448px; /* Could be more or less, depending on screen size */
+    width: 681px; /* Could be more or less, depending on screen size */
     font-size: 16px;
     -webkit-box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
     box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
-    z-index: 7;
+    z-index: 6;
 }
 
 #mode_a {
@@ -344,20 +343,20 @@ input[type=submit]:hover {
     -ms-user-select: none;
     user-select: none;
     width: 156px;
-	border: none;
-	color: black;
-	padding: 16px 32px;
-	text-align: center;
-	margin: 4px 2px;
-	transition: 0.3s;
+    border: none;
+    color: black;
+    padding: 16px 32px;
+    text-align: center;
+    margin: 4px 2px;
+    transition: 0.3s;
     -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     background-color: white;
 }
 
 .container:hover {
-	background-color: #3e8e41;
-	color: white;
+    background-color: #3e8e41;
+    color: white;
     -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.5);
     box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.5);
 }
@@ -430,22 +429,22 @@ input[type=submit]:hover {
 }
 
 .toggle:before {
-  content: "Average Interval";
-  display: block;
-  position: absolute;
-  z-index: 2;
-  width: 215px;
-  height: 40px;
-  background: gainsboro;
-  left: 5px;
-  top: 5px;
-  font: 16px/42px Arial, sans-serif;
-  text-indent: -142px;
-  word-spacing: 381px;
-  color: black;
-  white-space: nowrap;
+    content: "Average Interval";
+    display: block;
+    position: absolute;
+    z-index: 2;
+    width: 215px;
+    height: 40px;
+    background: gainsboro;
+    left: 5px;
+    top: 5px;
+    font: 16px/42px Arial, sans-serif;
+    text-indent: -142px;
+    word-spacing: 381px;
+    color: black;
+    white-space: nowrap;
 
-  transition: 0.3s;
+    transition: 0.3s;
 }
 
 .toggle:hover:before {
@@ -453,5 +452,73 @@ input[type=submit]:hover {
 }
 
 .toggle:checked:before {
-  left: 224px;
+    left: 224px;
+}
+
+.diagram_wrapper {
+    width: 100%;
+    margin-bottom: 30px;
+    height: 300px;
+}
+
+.diagram_element {
+    display: inline-block;
+    height: 300px;
+    position: relative;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.diagram_element_bar {
+    background: #5497ff;
+    width: 100%;
+    position: absolute;
+    bottom: 30px;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+}
+
+.diagram_element_label {
+    margin-top: 280px;
+    text-align: center;
+}
+
+.control_wrapper {
+    margin-top: 30px;
+}
+
+#control_set_1 {
+    display: none;
+}
+
+#control_set_2 {
+    display: none;
+}
+
+#control_set_3 {
+    display: none;
+}
+
+#loader {
+    display: none;
+    border: 14px solid #a2a2a2;
+    background: #a2a2a2;
+    border-radius: 50%;
+    border-top: 14px solid #db0006;
+    width: 50px;
+    height: 50px;
+    -webkit-animation: spin 5s linear infinite; /* Safari */
+    animation: spin 5s linear infinite;
+    margin: auto;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

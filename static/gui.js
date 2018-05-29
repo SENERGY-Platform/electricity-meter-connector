@@ -2,9 +2,15 @@
 
 let settings_modal;
 let conf_modal;
+let cal_modal;
 let mode_a_conf;
 let mode_i_conf;
 let mode_toggle;
+let loader;
+let diagram_wrapper;
+let controls_1;
+let controls_2;
+let controls_3;
 let lb;
 let rb;
 let nat;
@@ -38,9 +44,15 @@ async function loadInitalData(device_id) {
 window.addEventListener("DOMContentLoaded", function (e) {
     settings_modal = document.getElementById('settings_modal');
     conf_modal = document.getElementById('conf_modal');
+    cal_modal = document.getElementById('cal_modal');
     mode_a_conf = document.getElementById("mode_a");
     mode_i_conf = document.getElementById("mode_i");
     mode_toggle = document.getElementById("mode_toggle");
+    loader = document.getElementById("loader");
+    controls_1 = document.getElementById("control_set_1");
+    controls_2 = document.getElementById("control_set_2");
+    controls_3 = document.getElementById("control_set_3");
+    diagram_wrapper = document.getElementsByClassName('diagram_wrapper')[0];
     lb = document.getElementById("lb");
     rb = document.getElementById("rb");
     nat = document.getElementById("nat");
@@ -232,6 +244,79 @@ async function toggleConfModal() {
         conf_modal.style.display = "none";
         settings_modal.style.display = "block";
     }
+}
+
+
+function buildDiaElement(lb, rb, val, highest, res) {
+    let element = document.createElement('div');
+    element.className = 'diagram_element';
+    element.style.width = Math.floor((680 - 4 * res) / res) + 'px';
+    let bar = document.createElement('div');
+    bar.className = 'diagram_element_bar';
+    if (highest > 270) {
+        let ref = highest / 270;
+        bar.style.height = Math.floor(val / ref) + 'px';
+    } else {
+        bar.style.height = val + 'px';
+    }
+    let label = document.createElement('div');
+    label.className = 'diagram_element_label';
+    let text = document.createTextNode(lb + ' - ' + rb);
+    label.appendChild(text);
+    element.appendChild(bar);
+    element.appendChild(label);
+    return element;
+}
+
+
+function buildHistogram(data) {
+    while (diagram_wrapper.firstChild) {
+        diagram_wrapper.removeChild(diagram_wrapper.firstChild);
+    }
+    let data_array = data.split(';');
+    let max = 0;
+    for (let item of data_array) {
+        if (Number(item.split(':')[2]) > max) {
+            max = Number(item.split(':')[2]);
+        }
+    }
+    for (let item of data_array) {
+        let element = buildDiaElement(Number(item.split(':')[0]), Number(item.split(':')[1]), Number(item.split(':')[2]), max, data_array.length);
+        diagram_wrapper.appendChild(element);
+    }
+}
+
+
+function updateHST() {
+    buildHistogram('5:69:179;70:134:647;135:199:28;200:264:58;265:329:72;330:400:55');
+}
+
+
+function toggleCalModal() {
+    if (cal_modal.style.display === "none" || cal_modal.style.display === "") {
+        controls_2.style.display = "none";
+        controls_3.style.display = "none";
+        cal_modal.style.display = "block";
+        controls_1.style.display = "block";
+    } else {
+        loader.style.display = "none";
+        cal_modal.style.display = "none";
+    }
+}
+
+async function startCal() {
+    loader.style.display = "block";
+    controls_1.style.display = "none";
+    controls_2.style.display = "block";
+}
+
+async function startHST() {
+    controls_2.style.display = "none";
+    controls_3.style.display = "block";
+}
+
+async function finishCal() {
+    toggleCalModal()
 }
 
 async function submitConf(device=device_id) {
