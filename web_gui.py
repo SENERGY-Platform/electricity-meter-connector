@@ -5,8 +5,8 @@ try:
     from logger import root_logger, connector_client_log_handler
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
-from threading import Thread
-import logging, time, os
+from threading import Thread, Event
+import logging, time, functools
 
 
 logger = root_logger.getChild(__name__)
@@ -26,6 +26,11 @@ class WebGUI(Thread):
 
     def run(self):
         __class__.app.run(host=self._host, port=self._port)
+
+    @staticmethod
+    def callbk(event, msg=None):
+        event.message = msg
+        event.set()
 
     @staticmethod
     @app.route('/', methods=['GET'])
@@ -57,9 +62,6 @@ class WebGUI(Thread):
                 if end_point == "rs":
                     controller.readSensor()
                     return Response(status=200)
-                if end_point == "fe":
-                    controller.findEdges()
-                    return Response(status=200)
                 if end_point == "dbg":
                     controller.startDebug()
                     return Response(status=200)
@@ -78,6 +80,51 @@ class WebGUI(Thread):
                 if end_point == "res":
                     controller.haltController()
                     return Response(status=200)
+        except Exception as ex:
+            logger.error(ex)
+        return Response(status=500)
+
+    @staticmethod
+    @app.route('/<d_id>/fb', methods=['POST', 'GET'])
+    def getBoundaries(d_id):
+        try:
+            controller = SerialManager.getController(d_id)
+            if controller:
+                if request.method == 'POST':
+                    controller.findBoundaries()
+                    return Response(status=200)
+                if request.method == 'GET':
+                    event = Event()
+                    event.message = None
+                    controller.getResult(functools.partial(__class__.callbk, event))
+                    event.wait(timeout=30)
+                    if event.message:
+                        return jsonify(event.message)
+                    else:
+                        return Response(status=404)
+        except Exception as ex:
+            logger.error(ex)
+        return Response(status=500)
+
+    @staticmethod
+    @app.route('/<d_id>/hst', methods=['POST', 'GET'])
+    def getHistogram(d_id):
+        try:
+            controller = SerialManager.getController(d_id)
+            if controller:
+                if request.method == 'POST':
+                    conf = request.get_json()
+                    controller.buildHistogram(conf['lb'], conf['rb'], conf['res'])
+                    return Response(status=200)
+                if request.method == 'GET':
+                    event = Event()
+                    event.message = None
+                    controller.getResult(functools.partial(__class__.callbk, event))
+                    event.wait(timeout=30)
+                    if event.message:
+                        return jsonify(event.message)
+                    else:
+                        return Response(status=404)
         except Exception as ex:
             logger.error(ex)
         return Response(status=500)

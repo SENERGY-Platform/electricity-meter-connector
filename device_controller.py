@@ -267,17 +267,28 @@ class DeviceController(Thread):
             logger.error(ex)
         raise __class__.Interrupt
 
-    def findEdges(self):
-        self._commands.put(self._findEdges)
+    def getResult(self, callbk):
+        self._commands.put(functools.partial(self._getResult, callbk))
 
-    def _findEdges(self):
+    def _getResult(self, callbk):
+        self._serial_con.write(b'RES\n')
+        self._writeSerialLog('RES', 'C')
+        result = self._waitFor(':')
+        if result:
+            self._writeSerialLog(result, 'D')
+            callbk({'res': result.replace('\n', '').replace('\r', '')})
+            return True
+        callbk()
+        return False
+
+    def findBoundaries(self):
+        self._commands.put(self._findBoundaries)
+
+    def _findBoundaries(self):
         try:
-            self._serial_con.write(b'FE\n')
-            self._writeSerialLog('FE', 'C')
+            self._serial_con.write(b'FB\n')
+            self._writeSerialLog('FB', 'C')
             while True:
-                msg = self._serial_con.readline()
-                if msg:
-                    self._writeSerialLog(msg, 'D')
                 try:
                     command = self._commands.get_nowait()
                     if command == self._stopAction:
@@ -285,10 +296,58 @@ class DeviceController(Thread):
                             return True
                         else:
                             break
+                    elif type(command) is functools.partial and command.func == self._getResult:
+                        if not command():
+                            if self._stopAction():
+                                return True
+                            else:
+                                break
                     else:
                         self._writeSerialLog('busy - operation not possible')
                 except Empty:
                     pass
+        except (SerialException, SerialTimeoutException) as ex:
+            logger.error(ex)
+        raise __class__.Interrupt
+
+    def buildHistogram(self, lb, rb, res):
+        self._commands.put(functools.partial(self._buildHistogram, lb, rb, res))
+
+    def _buildHistogram(self, lb, rb, res):
+        try:
+            self._serial_con.write(b'HST\n')
+            self._writeSerialLog('HST', 'C')
+            msg = self._waitFor(':')
+            if msg:
+                self._writeSerialLog(msg, 'D')
+                conf = '{}:{}:{}\n'.format(lb, rb, res)
+                self._serial_con.write(conf.encode())
+                self._writeSerialLog(conf, 'C')
+                resp = self._waitFor(':')
+                self._writeSerialLog(resp, 'D')
+                if 'NaN' not in resp:
+                    while True:
+                        try:
+                            command = self._commands.get_nowait()
+                            if command == self._stopAction:
+                                if self._stopAction():
+                                    return True
+                                else:
+                                    break
+                            elif type(command) is functools.partial and command.func == self._getResult:
+                                if not command():
+                                    if self._stopAction():
+                                        return True
+                                    else:
+                                        break
+                            else:
+                                self._writeSerialLog('busy - operation not possible')
+                        except Empty:
+                            pass
+                else:
+                    logger.error("could not set histogram settings for device '{}'".format(self._id))
+            else:
+                logger.error("device '{}' did not enter histogram settings mode".format(self._id))
         except (SerialException, SerialTimeoutException) as ex:
             logger.error(ex)
         raise __class__.Interrupt
