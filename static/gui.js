@@ -99,18 +99,31 @@ function setDevice(device) {
 
 function httpPost(uri, header, body) {
     if (uri) {
-        let request = new XMLHttpRequest();
-        request.open("POST", uri);
-        if (header) {
-           request.setRequestHeader(header[0], header[1]);
-        }
-        request.timeout = 5000;
-        if (body) {
-            request.send(body);
-        } else {
-            request.send();
-        }
-
+        return new Promise(function (resolve, reject) {
+            let request = new XMLHttpRequest();
+            request.open("POST", uri);
+            if (header) {
+               request.setRequestHeader(header[0], header[1]);
+            }
+            request.timeout = 5000;
+            request.onreadystatechange = function () {
+                if (request.readyState === 4) {
+                    if (request.status === 200) {
+                        resolve(request.response);
+                    } else {
+                        reject(request.status);
+                    }
+                }
+            };
+            request.ontimeout = function () {
+                reject('timeout');
+            };
+            if (body) {
+                request.send(body);
+            } else {
+                request.send();
+            }
+        })
     }
 }
 
@@ -142,9 +155,13 @@ function httpGet(uri, header) {
 
 async function toggleAstrt(box) {
     if (box.checked === true) {
-        httpPost(device_id + "/eas");
+        await httpPost(device_id + "/eas").catch(function (e) {
+            console.log(e);
+        });
     } else if (box.checked === false) {
-        httpPost(device_id + "/das");
+        await httpPost(device_id + "/das").catch(function (e) {
+            console.log(e);
+        });
     }
     let result = await httpGet(device_id + "/sett").catch(function (e) {
         return false;
@@ -217,7 +234,7 @@ async function toggleConfModal() {
     }
 }
 
-function submitConf(device=device_id) {
+async function submitConf(device=device_id) {
     //let test = nat.checkValidity() && dt.checkValidity() && lld.checkValidity() && rpkwh.checkValidity() && tkwh.checkValidity();
     //console.log(test);
     let conf_a;
@@ -235,11 +252,13 @@ function submitConf(device=device_id) {
         dt: dt.value,
         ndt: ndt.value
     });
-    httpPost(device + "/conf", ["Content-type", "application/json"], data);
+    await httpPost(device + "/conf", ["Content-type", "application/json"], data).catch(function (e) {
+        console.log(e);
+    });
     toggleConfModal();
 }
 
-function submitSettings(device=device_id) {
+async function submitSettings(device=device_id) {
     //let test = nat.checkValidity() && dt.checkValidity() && lld.checkValidity() && rpkwh.checkValidity() && tkwh.checkValidity();
     //console.log(test);
     let mode;
@@ -254,7 +273,14 @@ function submitSettings(device=device_id) {
         mode: mode,
         rpkwh: rpkwh.value
     });
-    httpPost(device + "/sett", ["Content-type", "application/json"], data);
+    await httpPost(device + "/sett", ["Content-type", "application/json"], data).catch(function (e) {
+        console.log(e);
+    });
+    let result = await httpGet(device + "/sett").catch(function (e) {
+        return false;
+    });
+    if (result) {
+        setSettings(result);
+    }
     toggleSettingsModal();
-    title.innerHTML = name.value;
 }
