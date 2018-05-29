@@ -20,9 +20,24 @@ let name;
 let ws_console;
 let title;
 
+async function loadInitalData(device_id) {
+    let result = await httpGet(device_id + "/sett").catch(function (e) {
+        return false;
+    });
+    if (result) {
+        setSettings(result);
+    }
+    let result_2 = await httpGet(device_id + "/conf").catch(function (e) {
+        return false;
+    });
+    if (result_2) {
+        setConf(result_2);
+    }
+}
+
 window.addEventListener("DOMContentLoaded", function (e) {
-    settings_modal = document.getElementById('modal');
-    conf_modal = document.getElementsByClassName('modal-content2')[0];
+    settings_modal = document.getElementById('settings_modal');
+    conf_modal = document.getElementById('conf_modal');
     mode_a_conf = document.getElementById("mode_a");
     mode_i_conf = document.getElementById("mode_i");
     mode_toggle = document.getElementById("mode_toggle");
@@ -44,8 +59,7 @@ window.addEventListener("DOMContentLoaded", function (e) {
     let subnav_btns = subnav.getElementsByClassName('btn');
     let checkbox = subnav.getElementsByClassName('container')[0];
     if (device_id) {
-        getConf(device_id);
-        getSettings(device_id);
+        loadInitalData(device_id);
         openWS();
     } else {
         blocker.style.display = "block";
@@ -126,65 +140,60 @@ function httpGet(uri, header) {
     }
 }
 
-function toggleAstrt(box) {
+async function toggleAstrt(box) {
     if (box.checked === true) {
         httpPost(device_id + "/eas");
     } else if (box.checked === false) {
         httpPost(device_id + "/das");
     }
-    getSettings(device_id);
-}
-
-async function getConf(device) {
-    let result = await httpGet(device + "/conf").catch(function (e) {
-        console.log(e);
+    let result = await httpGet(device_id + "/sett").catch(function (e) {
+        return false;
     });
-    if (result !== 'timeout' && result !== undefined) {
-        let conf = JSON.parse(result);
-        nat.value = conf.conf_a;
-        lld.value = conf.conf_b;
-        lb.value = conf.conf_a;
-        rb.value = conf.conf_b;
-        dt.value = conf.dt;
-        ndt.value = conf.ndt;
-        return true
+    if (result) {
+        setSettings(result);
     }
-    return false
 }
 
-async function getSettings(device) {
-    let result = await httpGet(device + "/sett").catch(function (e) {
-        console.log(e);
-    });
-    if (result !== 'timeout' && result !== undefined) {
-        let conf = JSON.parse(result);
-        device_mode = conf.mode;
-        tkwh.value = conf.tkwh;
-        rpkwh.value = conf.rpkwh;
-        name.value = conf.name;
-        title.innerHTML = conf.name;
-        if (conf.strt === 0){
-            astrt.checked = false;
-        } else if (conf.strt === 1) {
-            astrt.checked = true;
-        }
-        if (device_mode === "I"){
-            mode_toggle.checked = false;
-            mode_i_conf.style.display = "block";
-            mode_a_conf.style.display = "none";
-        } else if (device_mode === "A") {
-            mode_toggle.checked = true;
-            mode_a_conf.style.display = "block";
-            mode_i_conf.style.display = "none";
-        }
-        return true
-    }
-    return false
+async function setConf(result) {
+    let conf = JSON.parse(result);
+    nat.value = conf.conf_a;
+    lld.value = conf.conf_b;
+    lb.value = conf.conf_a;
+    rb.value = conf.conf_b;
+    dt.value = conf.dt;
+    ndt.value = conf.ndt;
 }
 
-function toggleSettingsModal() {
+async function setSettings(result) {
+    let conf = JSON.parse(result);
+    device_mode = conf.mode;
+    tkwh.value = conf.tkwh;
+    rpkwh.value = conf.rpkwh;
+    name.value = conf.name;
+    title.innerHTML = conf.name;
+    if (conf.strt === 0){
+        astrt.checked = false;
+    } else if (conf.strt === 1) {
+        astrt.checked = true;
+    }
+    if (device_mode === "I"){
+        mode_toggle.checked = false;
+        mode_i_conf.style.display = "block";
+        mode_a_conf.style.display = "none";
+    } else if (device_mode === "A") {
+        mode_toggle.checked = true;
+        mode_a_conf.style.display = "block";
+        mode_i_conf.style.display = "none";
+    }
+}
+
+async function toggleSettingsModal() {
     if (settings_modal.style.display === "none" || settings_modal.style.display === "") {
-        if (getSettings(device_id)) {
+        let result = await httpGet(device_id + "/sett").catch(function (e) {
+            return false;
+        });
+        if (result) {
+            setSettings(result);
             settings_modal.style.display = "block";
         }
     } else {
@@ -192,13 +201,19 @@ function toggleSettingsModal() {
     }
 }
 
-function toggleConfModal() {
+async function toggleConfModal() {
     if (conf_modal.style.display === "none" || conf_modal.style.display === "") {
-        if (getConf(device_id)) {
+        let result = await httpGet(device_id + "/conf").catch(function (e) {
+            return false;
+        });
+        if (result) {
+            setConf(result);
             conf_modal.style.display = "block";
+            settings_modal.style.display = "none";
         }
     } else {
         conf_modal.style.display = "none";
+        settings_modal.style.display = "block";
     }
 }
 

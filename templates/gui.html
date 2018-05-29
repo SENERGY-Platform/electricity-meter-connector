@@ -14,10 +14,7 @@
 
 <body>
 
-<div id="modal" class="modal">
-
-  <!-- Modal content -->
-
+<div id="settings_modal" class="modal">
 	<div class="modal-content">
 		<form id="name_form" action="javascript:" onsubmit="submitSettings();">
 			<label for="name">Name: </label><input id="name" type="text"><br><br>
@@ -28,8 +25,10 @@
 			<button id="conf_btn" class="btn" type="button" onclick="toggleConfModal();">Configure Sensor</button>
 		</form>
 	</div>
+</div>
 
-	<div class="modal-content2">
+<div id="conf_modal" class="modal">
+	<div class="modal-content">
 		<form id="conf_form" action="javascript:" onsubmit="submitConf();">
 			<label for="dt">Positive Detection Threshold: </label><input id="dt" type="number" min="0" max="100000" required><br><br>
 			<label for="ndt">Negative Detection Threshold: </label><input id="ndt" type="number" min="0" max="100000" required><br><br>
@@ -45,7 +44,6 @@
 			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleConfModal();">Cancel</button>
 		</form>
 	</div>
-
 </div>
 
 <div class="wrapper">
