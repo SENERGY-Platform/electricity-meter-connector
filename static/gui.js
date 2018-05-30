@@ -91,6 +91,7 @@ window.addEventListener("DOMContentLoaded", function (e) {
             toggleSettingsModal();
         }
     });
+    toggleCalModal();
 });
 
 function openWS() {
@@ -250,14 +251,18 @@ async function toggleConfModal() {
 function buildDiaElement(lb, rb, val, highest, res) {
     let element = document.createElement('div');
     element.className = 'diagram_element';
-    element.style.width = Math.floor((680 - 4 * res) / res) + 'px';
+    element.style.width = Math.floor((680 - 2 * res) / res) + 'px';
     let bar = document.createElement('div');
     bar.className = 'diagram_element_bar';
-    if (highest > 270) {
-        let ref = highest / 270;
+    let bar_val = document.createTextNode(val);
+    if (highest > 265) {
+        let ref = highest / 265;
         bar.style.height = Math.floor(val / ref) + 'px';
     } else {
         bar.style.height = val + 'px';
+    }
+    if (parseInt(bar.style.height, 10) >= 10) {
+        bar.appendChild(bar_val);
     }
     let label = document.createElement('div');
     label.className = 'diagram_element_label';
@@ -288,7 +293,10 @@ function buildHistogram(data) {
 
 
 function updateHST() {
-    buildHistogram('5:69:179;70:134:647;135:199:28;200:264:58;265:329:72;330:400:55');
+    function gri(min, max) {
+        return Math.floor(Math.random() * (max - min + 1) ) + min;
+    }
+    buildHistogram('5:69:'+gri(300,1000)+';70:134:'+gri(4000,6000)+';135:199:'+gri(400,2000)+';200:264:'+gri(300,3000)+';265:329:'+gri(4000,6000)+';330:400:'+gri(300,3000)+';401:430:1234');
 }
 
 
@@ -296,6 +304,9 @@ function toggleCalModal() {
     if (cal_modal.style.display === "none" || cal_modal.style.display === "") {
         controls_2.style.display = "none";
         controls_3.style.display = "none";
+        while (diagram_wrapper.firstChild) {
+            diagram_wrapper.removeChild(diagram_wrapper.firstChild);
+        }
         cal_modal.style.display = "block";
         controls_1.style.display = "block";
     } else {

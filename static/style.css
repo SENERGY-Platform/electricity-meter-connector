@@ -294,7 +294,7 @@ input[type=submit]:hover {
     margin: auto; /* 15% from the top and centered */
     margin-top: 80px;
     padding: 20px;
-    width: 681px; /* Could be more or less, depending on screen size */
+    width: 711px; /* Could be more or less, depending on screen size */
     font-size: 16px;
     -webkit-box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
     box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
@@ -456,9 +456,12 @@ input[type=submit]:hover {
 }
 
 .diagram_wrapper {
-    width: 100%;
     margin-bottom: 30px;
     height: 300px;
+    background-color: white;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
+    padding: 15px;
 }
 
 .diagram_element {
@@ -466,7 +469,6 @@ input[type=submit]:hover {
     height: 300px;
     position: relative;
     margin-left: 2px;
-    margin-right: 2px;
 }
 
 .diagram_element_bar {
@@ -474,13 +476,15 @@ input[type=submit]:hover {
     width: 100%;
     position: absolute;
     bottom: 30px;
-    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
-    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.25);
+    text-align: center;
+    font-size: 10px;
+    color: white;
 }
 
 .diagram_element_label {
     margin-top: 280px;
     text-align: center;
+    font-size: 12px;
 }
 
 .control_wrapper {
