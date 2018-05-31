@@ -25,6 +25,7 @@ class WebGUI(Thread):
         self.start()
 
     def run(self):
+        logger.info("starting on port {}".format(self._port))
         __class__.app.run(host=self._host, port=self._port)
 
     @staticmethod
@@ -97,7 +98,7 @@ class WebGUI(Thread):
                     event = Event()
                     event.message = None
                     controller.getResult(functools.partial(__class__.callbk, event))
-                    event.wait(timeout=30)
+                    event.wait(timeout=10)
                     if event.message:
                         return jsonify(event.message)
                     else:
@@ -120,7 +121,7 @@ class WebGUI(Thread):
                     event = Event()
                     event.message = None
                     controller.getResult(functools.partial(__class__.callbk, event))
-                    event.wait(timeout=30)
+                    event.wait(timeout=10)
                     if event.message:
                         return jsonify(event.message)
                     else:

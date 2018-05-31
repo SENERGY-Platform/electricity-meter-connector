@@ -273,7 +273,7 @@ class DeviceController(Thread):
     def _getResult(self, callbk):
         self._serial_con.write(b'RES\n')
         self._writeSerialLog('RES', 'C')
-        result = self._waitFor(':')
+        result = self._waitFor(':', retries=1)
         if result:
             self._writeSerialLog(result, 'D')
             callbk({'res': result.replace('\n', '').replace('\r', '')})
