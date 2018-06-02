@@ -10,7 +10,7 @@ from serial import SerialException, SerialTimeoutException
 from threading import Thread
 from queue import Queue, Empty
 from enum import Enum
-import logging, functools, os, inspect, json, datetime
+import logging, os, inspect, json, datetime
 
 
 logger = root_logger.getChild(__name__)
@@ -54,22 +54,20 @@ class DeviceController(Thread):
             self._callbk(self._serial_con.port)
 
     def _loadDeviceInfo(self):
-        conf = devices_db.getDeviceConf(self._id)
+        conf = devices_db.getDevice(self._id)
         if not conf:
             logger.warning("no configuration found for device '{}'".format(self._id))
             if devices_db.addDevice(self._id):
                 logger.info("created configuration for device '{}'".format(self._id))
-                conf = devices_db.getDeviceConf(self._id)
+                conf = devices_db.getDevice(self._id)
             else:
                 logger.error("could not create configuration for device '{}'".format(self._id))
         if conf:
             self._mode = Mode(conf['mode'])
-            if self._mode == Mode.interval:
-                self._conf_a = conf['lb']
-                self._conf_b = conf['rb']
-            elif self._mode == Mode.average:
-                self._conf_a = conf['nat']
-                self._conf_b = conf['lld']
+            self._conf = {
+                Mode.interval: {'conf_a': conf['lb'], 'conf_b': conf['rb']},
+                Mode.average: {'conf_a': conf['nat'], 'conf_b': conf['lld']}
+            }
             self._dt = conf['dt']
             self._ndt = conf['ndt']
             self._strt = conf['strt']
@@ -124,9 +122,14 @@ class DeviceController(Thread):
                     self.startDetection()
                 while True:
                     try:
-                        command = self._commands.get(timeout=1)
+                        command, callbk, kwargs = self._commands.get(timeout=1)
                         if command != self._stopAction:
-                            command()
+                            if kwargs:
+                                command(callbk, **kwargs)
+                            else:
+                                command(callbk)
+                        else:
+                            callbk(409)
                     except Empty:
                         pass
                     except __class__.Interrupt:
@@ -148,10 +151,13 @@ class DeviceController(Thread):
 
     def getConf(self):
         return {
-            'conf_a': self._conf_a,
-            'conf_b': self._conf_b,
+            'mode': self._mode.value,
+            'conf': {
+                Mode.interval.value: self._conf[Mode.interval],
+                Mode.average.value: self._conf[Mode.average]
+            },
             'dt': self._dt,
-            'ndt': self._ndt,
+            'ndt': self._ndt
         }
 
     def getSettings(self):
@@ -159,69 +165,70 @@ class DeviceController(Thread):
             'strt': self._strt,
             'rpkwh': self._rpkwh,
             'tkwh': self._kwh,
-            'name': self._meter_name,
-            'mode': self._mode.value
+            'name': self._meter_name
         }
 
-    def setRotPerKwh(self, rpkwh):
-        self._rpkwh = rpkwh
-        devices_db.updateDeviceConf(self._id, rpkwh=self._rpkwh)
+    def setConf(self, callbk, mode, conf_a, conf_b, dt, ndt):
+        success = False
+        if Mode(mode) == Mode.interval:
+            success = devices_db.updateDevice(
+                self._id,
+                mode=Mode(mode).value,
+                lb=int(conf_a),
+                rb=int(conf_b),
+                dt=int(dt),
+                ndt=int(ndt)
+            )
+        elif Mode(mode) == Mode.average:
+            success = devices_db.updateDevice(
+                self._id,
+                mode=Mode(mode).value,
+                nat=int(conf_a),
+                lld=int(conf_b),
+                dt=int(dt),
+                ndt=int(ndt)
+            )
+        if success:
+            self._mode = Mode(mode)
+            self._conf[self._mode]['conf_a'] = int(conf_a)
+            self._conf[self._mode]['conf_b'] = int(conf_b)
+            self._dt = int(dt)
+            self._ndt = int(ndt)
+            self._commands.put((self._configureDevice, callbk, None))
 
-    def setKwh(self, kwh):
+    def setSettings(self, rpkwh, kwh, name):
         if type(kwh) is str:
             kwh = kwh.replace(',', '.')
-        self._kwh = float(kwh)
-        devices_db.updateDeviceConf(self._id, kwh=self._kwh)
+        if devices_db.updateDevice(self._id, rpkwh=int(rpkwh), kwh=float(kwh), name=str(name)):
+            self._rpkwh = int(rpkwh)
+            self._kwh = float(kwh)
+            self._meter_name = str(name)
+            if not self._device.name == self._meter_name:
+                self._device.name = self._meter_name
+                try:
+                    Client.update(self._device)
+                except AttributeError:
+                    DevicePool.update(self._device)
+
+    def setAutoStart(self, state):
+        if devices_db.updateDevice(self._id, strt=int(state)):
+            self._strt = int(state)
 
     def _calcAndWriteTotal(self, kwh):
+        devices_db.updateDevice(self._id, kwh=str(self._kwh))
         self._kwh = self._kwh + kwh
-        devices_db.updateDeviceConf(self._id, kwh=str(self._kwh))
-
-    def setName(self, name):
-        if not self._meter_name == str(name):
-            self._meter_name = str(name)
-            self._device.name = self._meter_name
-            devices_db.updateDeviceConf(self._id, name=self._meter_name)
-            Client.update(self._device)
-
-    def setMode(self, mode):
-        if Mode(str(mode)) != self._mode:
-            self._mode = Mode(str(mode))
-            devices_db.updateDeviceConf(self._id, mode=self._mode.value)
-            logger.info("changed mode for device {}".format(self._id))
-            self._loadDeviceInfo()
-            self.stopAction()
-            self._commands.put(functools.partial(self._configureDevice, init=True))
-
-    def setAutoStart(self, option):
-        if devices_db.updateDeviceConf(self._id, strt=option):
-            self._strt = option
-
-    def setDeviceConf(self, conf_a, conf_b, dt, ndt):
-        self._commands.put(functools.partial(self._configureDevice, conf_a, conf_b, dt, ndt))
 
 
     #---------- commands ----------#
 
-    def _configureDevice(self, conf_a=None, conf_b=None, dt=None, ndt=None, init=False):
-        #LB:RB:DT:NDT
-        #NAT:LLD:DT:NDT
-        if not init:
-            self._conf_a = conf_a
-            self._conf_b = conf_b
-            self._dt = dt
-            self._ndt = ndt
-            if self._mode == Mode.interval:
-                devices_db.updateDeviceConf(self._id, lb=self._conf_a, rb=self._conf_b, dt=self._dt, ndt=self._ndt)
-            elif self._mode == Mode.average:
-                devices_db.updateDeviceConf(self._id, nat=self._conf_a, lld=self._conf_b, dt=self._dt, ndt=self._ndt)
+    def _configureDevice(self, callbk=None, init=False):
         try:
             self._serial_con.write(b'CONF\n')
             self._writeSerialLog('CONF', 'C')
             msg = self._waitFor(':')
             if msg:
                 self._writeSerialLog(msg, 'D')
-                conf = '{}:{}:{}:{}:{}\n'.format(self._mode.value, self._conf_a, self._conf_b, self._dt, self._ndt)
+                conf = '{}:{}:{}:{}:{}\n'.format(self._mode.value, self._conf[self._mode]['conf_a'], self._conf[self._mode]['conf_b'], self._dt, self._ndt)
                 self._serial_con.write(conf.encode())
                 self._writeSerialLog(conf, 'C')
                 resp = self._waitFor(':')
@@ -229,91 +236,88 @@ class DeviceController(Thread):
                 if self._waitFor('RDY'):
                     self._writeSerialLog('RDY', 'D')
                     logger.info("configured device {}".format(self._id))
+                    if callbk:
+                        callbk(200)
                     return True
                 else:
                     logger.error("device '{}' not ready".format(self._id))
             else:
                 logger.error("device '{}' did not enter configuration mode".format(self._id))
-        except (SerialException, SerialTimeoutException) as ex:
+        except (SerialException, SerialTimeoutException, ValueError) as ex:
             logger.error(ex)
+            if callbk:
+                callbk(500)
         if init:
             return False
-        else:
-            raise __class__.Interrupt
+        raise __class__.Interrupt
 
-    def readSensor(self):
-        self._commands.put(self._readSensor)
+    def readSensor(self, callbk):
+        self._commands.put((self._readSensor, callbk, None))
 
-    def _readSensor(self):
+    def _readSensor(self, callbk):
         try:
             self._serial_con.write(b'MR\n')
             self._writeSerialLog('MR', 'C')
+            callbk(200)
             while True:
                 msg = self._serial_con.readline()
                 if msg:
                     self._writeSerialLog(msg, 'D')
                 try:
-                    command = self._commands.get_nowait()
+                    command, callbk, kwargs = self._commands.get_nowait()
                     if command == self._stopAction:
-                        if self._stopAction():
+                        if self._stopAction(callbk):
                             return True
                         else:
                             break
                     else:
+                        callbk(409)
                         self._writeSerialLog('busy - operation not possible')
                 except Empty:
                     pass
         except (SerialException, SerialTimeoutException) as ex:
             logger.error(ex)
+            callbk(500)
         raise __class__.Interrupt
 
-    def getResult(self, callbk):
-        self._commands.put(functools.partial(self._getResult, callbk))
+    def findBoundaries(self, callbk):
+        self._commands.put((self._findBoundaries, callbk, None))
 
-    def _getResult(self, callbk):
-        self._serial_con.write(b'RES\n')
-        self._writeSerialLog('RES', 'C')
-        result = self._waitFor(':', retries=1)
-        if result:
-            self._writeSerialLog(result, 'D')
-            callbk({'res': result.replace('\n', '').replace('\r', '')})
-            return True
-        callbk()
-        return False
-
-    def findBoundaries(self):
-        self._commands.put(self._findBoundaries)
-
-    def _findBoundaries(self):
+    def _findBoundaries(self, callbk):
         try:
             self._serial_con.write(b'FB\n')
             self._writeSerialLog('FB', 'C')
+            callbk(200)
             while True:
                 try:
-                    command = self._commands.get_nowait()
+                    command, callbk, kwargs = self._commands.get_nowait()
                     if command == self._stopAction:
-                        if self._stopAction():
+                        self._serial_con.write(b'STP\n')
+                        self._writeSerialLog('STP', 'C')
+                        result = self._waitFor(':')
+                        if result:
+                            self._writeSerialLog(result, 'D')
+                        if self._waitFor('RDY'):
+                            self._writeSerialLog('RDY', 'D')
+                            callbk(200, {'res': result.replace('\n', '').replace('\r', '')})
                             return True
                         else:
+                            callbk(500)
                             break
-                    elif type(command) is functools.partial and command.func == self._getResult:
-                        if not command():
-                            if self._stopAction():
-                                return True
-                            else:
-                                break
                     else:
                         self._writeSerialLog('busy - operation not possible')
+                        callbk(409)
                 except Empty:
                     pass
         except (SerialException, SerialTimeoutException) as ex:
             logger.error(ex)
+            callbk(500)
         raise __class__.Interrupt
 
-    def buildHistogram(self, lb, rb, res):
-        self._commands.put(functools.partial(self._buildHistogram, lb, rb, res))
+    def buildHistogram(self, callbk, lb, rb, res):
+        self._commands.put((self._buildHistogram, callbk, {'lb':lb, 'rb':rb, 'res':res}))
 
-    def _buildHistogram(self, lb, rb, res):
+    def _buildHistogram(self, callbk, lb, rb, res):
         try:
             self._serial_con.write(b'HST\n')
             self._writeSerialLog('HST', 'C')
@@ -326,55 +330,66 @@ class DeviceController(Thread):
                 resp = self._waitFor(':')
                 self._writeSerialLog(resp, 'D')
                 if 'NaN' not in resp:
+                    callbk(200)
                     while True:
                         try:
-                            command = self._commands.get_nowait()
+                            command, callbk, kwargs = self._commands.get_nowait()
                             if command == self._stopAction:
-                                if self._stopAction():
+                                self._serial_con.write(b'STP\n')
+                                self._writeSerialLog('STP', 'C')
+                                result = self._waitFor(':')
+                                if result:
+                                    self._writeSerialLog(result, 'D')
+                                if self._waitFor('RDY'):
+                                    self._writeSerialLog('RDY', 'D')
+                                    callbk(200, {'res': result.replace('\n', '').replace('\r', '')})
                                     return True
                                 else:
+                                    callbk(500)
                                     break
-                            elif type(command) is functools.partial and command.func == self._getResult:
-                                if not command():
-                                    if self._stopAction():
-                                        return True
-                                    else:
-                                        break
                             else:
                                 self._writeSerialLog('busy - operation not possible')
+                                callbk(409)
                         except Empty:
                             pass
                 else:
                     logger.error("could not set histogram settings for device '{}'".format(self._id))
+                    callbk(500)
             else:
                 logger.error("device '{}' did not enter histogram settings mode".format(self._id))
+                callbk(500)
         except (SerialException, SerialTimeoutException) as ex:
             logger.error(ex)
+            callbk(500)
         raise __class__.Interrupt
 
-    def stopAction(self):
-        self._commands.put(self._stopAction)
+    def stopAction(self, callbk):
+        self._commands.put((self._stopAction, callbk, None))
 
-    def _stopAction(self):
+    def _stopAction(self, callbk):
         try:
             self._serial_con.write(b'STP\n')
             self._writeSerialLog('STP', 'C')
             if self._waitFor('RDY'):
                 self._writeSerialLog('RDY', 'D')
+                callbk(200)
                 return True
         except SerialTimeoutException:
+            callbk(500)
             return False
 
-    def startDetection(self):
-        self._commands.put(self._startDetection)
+    def startDetection(self, callbk=None):
+        self._commands.put((self._startDetection, callbk, None))
 
-    def _startDetection(self):
+    def _startDetection(self, callbk=None):
         if int(self._rpkwh) > 0:
             #ws = int(3600000 / int(self._rpkwh))
             #kWh = ws / 3600000
             try:
                 self._serial_con.write(b'STRT\n')
                 self._writeSerialLog('STRT', 'C')
+                if callbk:
+                    callbk(200)
                 while True:
                     msg = self._serial_con.readline()
                     if 'DET' in msg.decode():
@@ -392,49 +407,61 @@ class DeviceController(Thread):
                     elif 'CAL' in msg.decode():
                         self._writeSerialLog('CAL', 'D')
                     try:
-                        command = self._commands.get_nowait()
+                        command, callbk, kwargs = self._commands.get_nowait()
                         if command == self._stopAction:
-                            if self._stopAction():
+                            if self._stopAction(callbk):
                                 return True
                             else:
                                 break
                         else:
                             self._writeSerialLog('busy - operation not possible')
+                            callbk(409)
                     except Empty:
                         pass
             except (SerialException, SerialTimeoutException) as ex:
                 logger.error(ex)
+                if callbk:
+                    callbk(500)
             raise __class__.Interrupt
         else:
             logger.warning("detection for device '{}' failed - rounds/kWh not set".format(self._id))
             self._writeSerialLog('rotations/kWh not set')
+            if callbk:
+                callbk(500)
 
-    def startDebug(self):
-        self._commands.put(self._startDebug)
+    def startDebug(self, callbk):
+        self._commands.put((self._startDebug, callbk, None))
 
-    def _startDebug(self):
+    def _startDebug(self, callbk):
         try:
             self._serial_con.write(b'STRT\n')
             self._writeSerialLog('STRT', 'C')
+            callbk(200)
             while True:
                 msg = self._serial_con.readline()
                 if msg.decode() != '':
                     self._writeSerialLog(msg, 'D')
                 try:
-                    command = self._commands.get_nowait()
+                    command, callbk, kwargs = self._commands.get_nowait()
                     if command == self._stopAction:
-                        if self._stopAction():
+                        if command(callbk):
                             return True
                         else:
                             break
+                    else:
+                        self._writeSerialLog('busy - operation not possible')
+                        callbk(409)
                 except Empty:
                     pass
         except (SerialException, SerialTimeoutException) as ex:
             logger.error(ex)
+            callbk(500)
         raise __class__.Interrupt
 
-    def haltController(self):
-        self._commands.put(self._haltController)
+    def haltController(self, callbk=None):
+        self._commands.put((self._haltController, callbk, None))
 
-    def _haltController(self):
+    def _haltController(self, callbk=None):
+        if callbk:
+            callbk(200)
         raise __class__.Interrupt
