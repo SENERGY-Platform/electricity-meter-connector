@@ -271,7 +271,7 @@ input[type=submit]:hover {
     height: 100%; /* Full height */
     overflow: auto; /* Enable scroll if needed */
     background-color: rgb(0,0,0); /* Fallback color */
-    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    background-color: rgba(0,0,0,0.25); /* Black w/ opacity */
 }
 
 /* Modal Content/Box */
@@ -455,13 +455,24 @@ input[type=submit]:hover {
     left: 224px;
 }
 
+.boundary_wrapper {
+    margin-bottom: 8px;
+    height: 100px;
+    display: none;
+    background-color: white;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
+    padding: 15px;
+}
+
 .diagram_wrapper {
-    margin-bottom: 30px;
+    margin-bottom: 8px;
     height: 300px;
     background-color: white;
     -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
     padding: 15px;
+    display: none;
 }
 
 .diagram_element {
@@ -479,12 +490,28 @@ input[type=submit]:hover {
     text-align: center;
     font-size: 10px;
     color: white;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.15);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.15);
+}
+
+.diagram_element_bar:hover {
+    transition: 0.3s;
+    background: #db0006;
 }
 
 .diagram_element_label {
     margin-top: 280px;
     text-align: center;
     font-size: 12px;
+}
+
+.help_wrapper {
+    height: 50px;
+    background-color: white;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
+    padding: 15px;
+    margin-bottom: 8px;
 }
 
 .control_wrapper {
@@ -505,24 +532,24 @@ input[type=submit]:hover {
 
 #loader {
     display: none;
-    border: 14px solid #a2a2a2;
-    background: #a2a2a2;
-    border-radius: 50%;
-    border-top: 14px solid #db0006;
-    width: 50px;
-    height: 50px;
-    -webkit-animation: spin 5s linear infinite; /* Safari */
-    animation: spin 5s linear infinite;
-    margin: auto;
+  border: 10px solid #d6d6d6;
+  border-radius: 50%;
+  border-top: 10px solid #3e8e41;
+  width: 30px;
+  height: 30px;
+  -webkit-animation: spin 0.5s linear infinite; /* Safari */
+  animation: spin 0.5s linear infinite;
+    margin-left: 87px;
+    margin-top: 30px;
 }
 
 /* Safari */
 @-webkit-keyframes spin {
-    0% { -webkit-transform: rotate(0deg); }
-    100% { -webkit-transform: rotate(360deg); }
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

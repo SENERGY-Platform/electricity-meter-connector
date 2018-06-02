@@ -16,42 +16,43 @@
 
 <div id="settings_modal" class="modal">
 	<div class="modal-content">
-		<form id="name_form" action="javascript:" onsubmit="submitSettings();">
+		<form id="sett_form" name="sett_form" action="javascript:" onsubmit="submitSettings(this);">
 			<label for="name">Name: </label><input id="name" type="text"><br><br>
 			<label for="rpkwh">Rotations / kWh: </label><input id="rpkwh" type="number" min="0" max="100000" required><br><br>
 			<label for="tkwh">Total kWh: </label><input id="tkwh" type="text" required><br><br>
-			<label for="mode_toggle">Mode: </label><input id="mode_toggle" class="toggle" type="checkbox" /><br><br>
-			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleSettingsModal();">Cancel</button>
 			<button id="conf_btn" class="btn" type="button" onclick="toggleConfModal();">Configure Sensor</button>
+			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleSettingsModal();">Cancel</button>
+			<input type="hidden" id="prev_sett">
 		</form>
 	</div>
 </div>
 
 <div id="conf_modal" class="modal">
 	<div class="modal-content">
-		<form id="conf_form" action="javascript:" onsubmit="submitConf();">
-			<label for="dt">Positive Detection Threshold: </label><input id="dt" type="number" min="0" max="100000" required><br><br>
-			<label for="ndt">Negative Detection Threshold: </label><input id="ndt" type="number" min="0" max="100000" required><br><br>
+		<form id="conf_form" name="conf_form" action="javascript:" onsubmit="submitConf(this);">
+			<label for="mode_toggle">Mode: </label><input id="mode_toggle" class="toggle" type="checkbox" onclick="toggleMode(this);" />
 			<div id="mode_a">
-				<label for="nat">Average Threshold: </label><input id="nat" type="number" min="0" max="100000" required><br><br>
+				<br><br><label for="nat">Average Threshold: </label><input id="nat" type="number" min="0" max="100000" required><br><br>
 				<label for="lld">Delta: </label><input id="lld" type="number" min="0" max="30000" required><br><br>
 			</div>
 			<div id="mode_i">
+				<button id="cal_btn" class="btn" type="button" onclick="toggleCalModal();">Calibrate Sensor</button><br><br>
 				<label for="lb">Left Boundary: </label><input id="lb" type="number" min="0" max="100000" required><br><br>
 				<label for="rb">Right Boundary: </label><input id="rb" type="number" min="0" max="100000" required><br><br>
-				<button id="cal_btn" class="btn" type="button" onclick="toggleCalModal();">Calibrate Sensor</button>
 			</div>
+			<label for="dt">Positive Detection Threshold: </label><input id="dt" type="number" min="0" max="100000" required><br><br>
+			<label for="ndt">Negative Detection Threshold: </label><input id="ndt" type="number" min="0" max="100000" required><br><br>
 			<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleConfModal();">Cancel</button>
+			<input type="hidden" id="prev_conf">
 		</form>
 	</div>
 </div>
 
 <div id="cal_modal" class="modal">
 	<div class="modal-content2">
-		<div class="diagram_wrapper">
-
-		</div>
-		<div id="loader"></div>
+		<div class="boundary_wrapper"></div>
+		<div class="diagram_wrapper"></div>
+		<div class="help_wrapper"></div>
 		<div class="control_wrapper">
 			<div id="control_set_1">
 				<button class="btn" type="button" onclick="startCal();">Start</button>
@@ -60,12 +61,12 @@
 			<div id="control_set_2">
 				<button class="btn" type="button" onclick="updateBoundaries();">Update</button>
 				<button class="btn" type="button" onclick="startHST();">Next</button>
-				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/stp');">Cancel</button>
+				<button class="btn" type="button" onclick="toggleCalModal();">Cancel</button>
 			</div>
 			<div id="control_set_3">
 				<button class="btn" type="button" onclick="updateHST();">Update</button>
 				<button class="btn" type="button" onclick="finishCal();">Finish</button>
-				<button class="btn" type="button" onclick="httpPost('{{ d_id }}/stp');">Cancel</button>
+				<button class="btn" type="button" onclick="toggleCalModal();">Cancel</button>
 			</div>
 		</div>
 	</div>
@@ -98,17 +99,18 @@
 	</div>
 
 	<div class="sub-navigation">
-		<button class="btn" type="button" id="rs_btn" onclick="httpPost('{{ d_id }}/rs');">Read Sensor</button>
-		<button class="btn" type="button" id="dbg_btn" onclick="httpPost('{{ d_id }}/dbg');">Debug Detection</button>
-		<button class="btn" type="button" id="strt_btn" onclick="httpPost('{{ d_id }}/strt');">Start Detection</button>
-		<button class="btn" type="button" id="stp_btn" onclick="httpPost('{{ d_id }}/stp');">Stop Current Action</button>
+		<button class="btn" type="button" id="rs_btn" onclick="awaitRequest('POST', '{{ d_id }}/rs');">Read Sensor</button>
+		<button class="btn" type="button" id="dbg_btn" onclick="awaitRequest('POST', '{{ d_id }}/dbg');">Debug Detection</button>
+		<button class="btn" type="button" id="strt_btn" onclick="awaitRequest('POST', '{{ d_id }}/strt');">Start Detection</button>
+		<button class="btn" type="button" id="stp_btn" onclick="awaitRequest('POST', '{{ d_id }}/stp');">Stop Current Action</button>
 		<br><br>
 		<button class="btn" type="button" onclick="toggleSettingsModal();">Settings</button>
-		<button class="btn" type="button" id="res_btn" onclick="httpPost('{{ d_id }}/res');">Reset</button>
+		<button class="btn" type="button" id="res_btn" onclick="awaitRequest('POST', '{{ d_id }}/res');">Reset</button>
 		<label class="container">Autostart
 			<input id="astrt" type="checkbox" onclick="toggleAstrt(this);">
 			<span class="checkmark"></span>
 		</label>
+		<div id="loader"></div>
 	</div>
 
 </div><!-- .wrapper -->
