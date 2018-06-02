@@ -101,4 +101,4 @@ class SerialManager(SimpleSingleton, Thread):
         logger.debug("starting monitor routine")
         while True:
             self._monitorPorts()
-            sleep(5)
+            sleep(2)
