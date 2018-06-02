@@ -1,12 +1,12 @@
 try:
-    from flask import Flask, render_template, Response, request, jsonify
+    from flask import Flask, render_template, Response, request
     from serial_manager import SerialManager
     from ws_console import WebsocketConsole
     from logger import root_logger, connector_client_log_handler
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 from threading import Thread, Event
-import logging, time, functools
+import logging, time, functools, json
 
 
 logger = root_logger.getChild(__name__)
@@ -14,6 +14,11 @@ werkzeug_logger = logging.getLogger('werkzeug')
 werkzeug_logger.addHandler(connector_client_log_handler)
 werkzeug_logger.setLevel(logging.WARNING)
 
+class DeviceEvent(Event):
+    def __init__(self):
+        super().__init__()
+        self.status = None
+        self.message = None
 
 class WebGUI(Thread):
     app = Flask(__name__)
@@ -29,7 +34,8 @@ class WebGUI(Thread):
         __class__.app.run(host=self._host, port=self._port)
 
     @staticmethod
-    def callbk(event, msg=None):
+    def callbk(event, status, msg=None):
+        event.status = status
         event.message = msg
         event.set()
 
@@ -55,32 +61,84 @@ class WebGUI(Thread):
         return render_template('gui.html', devices=devices)
 
     @staticmethod
-    @app.route('/<d_id>/<end_point>', methods=['POST'])
-    def endpoint(d_id, end_point):
+    @app.route('/<d_id>/rs', methods=['POST'])
+    def readSensor(d_id):
         try:
             controller = SerialManager.getController(d_id)
             if controller:
-                if end_point == "rs":
-                    controller.readSensor()
-                    return Response(status=200)
-                if end_point == "dbg":
-                    controller.startDebug()
-                    return Response(status=200)
-                if end_point == "strt":
-                    controller.startDetection()
-                    return Response(status=200)
-                if end_point == "stp":
-                    controller.stopAction()
-                    return Response(status=200)
-                if end_point == "eas":
-                    controller.setAutoStart(1)
-                    return Response(status=200)
-                if end_point == "das":
-                    controller.setAutoStart(0)
-                    return Response(status=200)
-                if end_point == "res":
-                    controller.haltController()
-                    return Response(status=200)
+                event = DeviceEvent()
+                controller.readSensor(functools.partial(__class__.callbk, event))
+                event.wait(timeout=15)
+                return Response(status=event.status, response=json.dumps(event.message))
+        except Exception as ex:
+            logger.error(ex)
+        return Response(status=500)
+
+    @staticmethod
+    @app.route('/<d_id>/dbg', methods=['POST'])
+    def startDebug(d_id):
+        try:
+            controller = SerialManager.getController(d_id)
+            if controller:
+                event = DeviceEvent()
+                controller.startDebug(functools.partial(__class__.callbk, event))
+                event.wait(timeout=15)
+                return Response(status=event.status, response=json.dumps(event.message))
+        except Exception as ex:
+            logger.error(ex)
+        return Response(status=500)
+
+    @staticmethod
+    @app.route('/<d_id>/strt', methods=['POST'])
+    def startDetection(d_id):
+        try:
+            controller = SerialManager.getController(d_id)
+            if controller:
+                event = DeviceEvent()
+                controller.startDetection(functools.partial(__class__.callbk, event))
+                event.wait(timeout=15)
+                return Response(status=event.status, response=json.dumps(event.message))
+        except Exception as ex:
+            logger.error(ex)
+        return Response(status=500)
+
+    @staticmethod
+    @app.route('/<d_id>/stp', methods=['POST'])
+    def stopAction(d_id):
+        try:
+            controller = SerialManager.getController(d_id)
+            if controller:
+                event = DeviceEvent()
+                controller.stopAction(functools.partial(__class__.callbk, event))
+                event.wait(timeout=15)
+                return Response(status=event.status, response=json.dumps(event.message))
+        except Exception as ex:
+            logger.error(ex)
+        return Response(status=500)
+
+    @staticmethod
+    @app.route('/<d_id>/as', methods=['POST'])
+    def setAutoStart(d_id):
+        try:
+            controller = SerialManager.getController(d_id)
+            if controller:
+                req = request.get_json()
+                controller.setAutoStart(req['state'])
+                return Response(status=200, response=json.dumps(req))
+        except Exception as ex:
+            logger.error(ex)
+        return Response(status=500)
+
+    @staticmethod
+    @app.route('/<d_id>/res', methods=['POST'])
+    def resetController(d_id):
+        try:
+            controller = SerialManager.getController(d_id)
+            if controller:
+                event = DeviceEvent()
+                controller.haltController(functools.partial(__class__.callbk, event))
+                event.wait(timeout=15)
+                return Response(status=event.status, response=json.dumps(event.message))
         except Exception as ex:
             logger.error(ex)
         return Response(status=500)
@@ -91,18 +149,13 @@ class WebGUI(Thread):
         try:
             controller = SerialManager.getController(d_id)
             if controller:
+                event = DeviceEvent()
                 if request.method == 'POST':
-                    controller.findBoundaries()
-                    return Response(status=200)
+                    controller.findBoundaries(functools.partial(__class__.callbk, event))
                 if request.method == 'GET':
-                    event = Event()
-                    event.message = None
-                    controller.getResult(functools.partial(__class__.callbk, event))
-                    event.wait(timeout=10)
-                    if event.message:
-                        return jsonify(event.message)
-                    else:
-                        return Response(status=404)
+                    controller.stopAction(functools.partial(__class__.callbk, event))
+                event.wait(timeout=15)
+                return Response(status=event.status, response=json.dumps(event.message))
         except Exception as ex:
             logger.error(ex)
         return Response(status=500)
@@ -113,19 +166,14 @@ class WebGUI(Thread):
         try:
             controller = SerialManager.getController(d_id)
             if controller:
+                event = DeviceEvent()
                 if request.method == 'POST':
                     conf = request.get_json()
-                    controller.buildHistogram(conf['lb'], conf['rb'], conf['res'])
-                    return Response(status=200)
+                    controller.buildHistogram(functools.partial(__class__.callbk, event), conf['lb'], conf['rb'], conf['res'])
                 if request.method == 'GET':
-                    event = Event()
-                    event.message = None
-                    controller.getResult(functools.partial(__class__.callbk, event))
-                    event.wait(timeout=10)
-                    if event.message:
-                        return jsonify(event.message)
-                    else:
-                        return Response(status=404)
+                    controller.stopAction(functools.partial(__class__.callbk, event))
+                event.wait(timeout=15)
+                return Response(status=event.status, response=json.dumps(event.message))
         except Exception as ex:
             logger.error(ex)
         return Response(status=500)
@@ -136,16 +184,15 @@ class WebGUI(Thread):
         try:
             controller = SerialManager.getController(d_id)
             if controller:
+                event = DeviceEvent()
                 if request.method == 'POST':
                     conf = request.get_json()
-                    controller.setDeviceConf(conf['conf_a'], conf['conf_b'], conf['dt'], conf['ndt'])
-                    return Response(status=200)
+                    controller.setConf(functools.partial(__class__.callbk, event), conf['mode'], conf['conf_a'], conf['conf_b'], conf['dt'], conf['ndt'])
                 if request.method == 'GET':
                     conf = controller.getConf()
-                    if conf:
-                        return jsonify(conf)
-                    else:
-                        return Response(status=404)
+                    event.set()
+                event.wait(timeout=15)
+                return Response(status=event.status, response=json.dumps(conf))
         except Exception as ex:
             logger.error(ex)
         return Response(status=500)
@@ -158,17 +205,10 @@ class WebGUI(Thread):
             if controller:
                 if request.method == 'POST':
                     sett = request.get_json()
-                    controller.setRotPerKwh(sett['rpkwh'])
-                    controller.setKwh(sett['tkwh'])
-                    controller.setName(sett['name'])
-                    controller.setMode(sett['mode'])
-                    return Response(status=200)
+                    controller.setSettings(sett['rpkwh'], sett['tkwh'], sett['name'])
                 if request.method == 'GET':
                     sett = controller.getSettings()
-                    if sett:
-                        return jsonify(sett)
-                    else:
-                        return Response(status=404)
+                return Response(status=200, response=json.dumps(sett))
         except Exception as ex:
             logger.error(ex)
         return Response(status=500)
