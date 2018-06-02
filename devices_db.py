@@ -76,7 +76,7 @@ class DevicesDatabase(metaclass=Singleton):
         )
         return self._executeQuery(query)
 
-    def getDeviceConf(self, device_id):
+    def getDevice(self, device_id):
         query = 'SELECT * FROM {table} WHERE {id}="{id_v}"'.format(
             table=__class__._devices_table,
             id=__class__._devices_col[0][0],
@@ -90,7 +90,7 @@ class DevicesDatabase(metaclass=Singleton):
             return r_dict
         return None
 
-    def updateDeviceConf(self, device_id, **kwargs):
+    def updateDevice(self, device_id, **kwargs):
         firstElement = lambda li: [sublist[0] for sublist in li]
         columns = firstElement(__class__._devices_col)
         values = list()
