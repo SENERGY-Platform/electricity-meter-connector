@@ -187,6 +187,7 @@ function pollDevices() {
 }
 
 async function loadDevice(device_id) {
+    title.innerHTML = "Ferraris Sensor Gateway";
     astrt.checked = false;
     if (current_ws !== undefined) {
         current_ws.close(1000);
