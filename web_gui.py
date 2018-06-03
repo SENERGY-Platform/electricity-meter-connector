@@ -166,16 +166,13 @@ class WebGUI(Thread):
         return Response(status=500)
 
     @staticmethod
-    @app.route('/devices/<d_id>/fb', methods=['POST', 'GET'])
+    @app.route('/devices/<d_id>/fb', methods=['POST'])
     def getBoundaries(d_id):
         try:
             controller = SerialManager.getController(d_id)
             if controller:
                 event = DeviceEvent()
-                if request.method == 'POST':
-                    controller.findBoundaries(functools.partial(__class__.callbk, event))
-                if request.method == 'GET':
-                    controller.stopAction(functools.partial(__class__.callbk, event))
+                controller.findBoundaries(functools.partial(__class__.callbk, event))
                 event.wait(timeout=15)
                 return Response(status=event.status, response=json.dumps(event.message))
         except Exception as ex:
@@ -183,17 +180,14 @@ class WebGUI(Thread):
         return Response(status=500)
 
     @staticmethod
-    @app.route('/devices/<d_id>/hst', methods=['POST', 'GET'])
+    @app.route('/devices/<d_id>/hst', methods=['POST'])
     def getHistogram(d_id):
         try:
             controller = SerialManager.getController(d_id)
             if controller:
                 event = DeviceEvent()
-                if request.method == 'POST':
-                    conf = request.get_json()
-                    controller.buildHistogram(functools.partial(__class__.callbk, event), conf['lb'], conf['rb'], conf['res'])
-                if request.method == 'GET':
-                    controller.stopAction(functools.partial(__class__.callbk, event))
+                conf = request.get_json()
+                controller.buildHistogram(functools.partial(__class__.callbk, event), conf['lb'], conf['rb'], conf['res'])
                 event.wait(timeout=15)
                 return Response(status=event.status, response=json.dumps(event.message))
         except Exception as ex:
