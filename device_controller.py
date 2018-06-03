@@ -290,7 +290,7 @@ class DeviceController(Thread):
             callbk(200)
             while True:
                 try:
-                    command, callbk, kwargs = self._commands.get_nowait()
+                    command, callbk, kwargs = self._commands.get(timeout=1)
                     if command == self._stopAction:
                         self._serial_con.write(b'STP\n')
                         self._writeSerialLog('STP', 'C')
@@ -333,7 +333,7 @@ class DeviceController(Thread):
                     callbk(200)
                     while True:
                         try:
-                            command, callbk, kwargs = self._commands.get_nowait()
+                            command, callbk, kwargs = self._commands.get(timeout=1)
                             if command == self._stopAction:
                                 self._serial_con.write(b'STP\n')
                                 self._writeSerialLog('STP', 'C')
