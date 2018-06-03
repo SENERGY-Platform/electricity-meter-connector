@@ -72,6 +72,7 @@ body {
     right: 0;
     bottom: 0;
     z-index: 3;
+    background-color: rgba(245,245,245,0.55);
 }
 
 
@@ -299,6 +300,19 @@ input[type=submit]:hover {
     -webkit-box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
     box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
     z-index: 6;
+}
+
+#reload_btn {
+    width: 444px;
+}
+
+#disconnected_modal span {
+    text-align: center;
+    font-size: 18px;
+    display: block;
+    padding-top: 10px;
+    padding-bottom: 25px;
+    color: #e90000;
 }
 
 #mode_a {
@@ -530,6 +544,20 @@ input[type=submit]:hover {
     display: none;
 }
 
+#loader_reconnect  {
+    display: block;
+  border: 7px solid #d6d6d6;
+  border-radius: 50%;
+  border-top: 7px solid #878787;
+  width: 20px;
+  height: 20px;
+  -webkit-animation: spin 0.5s linear infinite; /* Safari */
+  animation: spin 0.5s linear infinite;
+    margin: auto;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
 #loader {
     display: none;
   border: 10px solid #d6d6d6;
@@ -537,8 +565,8 @@ input[type=submit]:hover {
   border-top: 10px solid #3e8e41;
   width: 30px;
   height: 30px;
-  -webkit-animation: spin 0.5s linear infinite; /* Safari */
-  animation: spin 0.5s linear infinite;
+  -webkit-animation: spin 0.35s linear infinite; /* Safari */
+  animation: spin 0.35s linear infinite;
     margin-left: 87px;
     margin-top: 30px;
 }
