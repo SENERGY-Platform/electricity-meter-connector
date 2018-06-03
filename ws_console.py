@@ -30,7 +30,7 @@ class WebsocketConsole(Thread):
                 tail_process = await asyncio.create_subprocess_exec('tail', '-F', file_to_tail, stdout=PIPE, stderr=STDOUT, loop=self._event_loop)
                 while True:
                     try:
-                        line = await asyncio.wait_for(tail_process.stdout.readline(), timeout=1, loop=self._event_loop)
+                        line = await asyncio.wait_for(tail_process.stdout.readline(), timeout=0.4, loop=self._event_loop)
                         if line and websocket.open:
                             try:
                                 line = line.decode().replace('\n', '').replace('\r', '')
