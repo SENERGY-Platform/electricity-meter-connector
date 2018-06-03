@@ -1,5 +1,7 @@
 "use strict";
 
+let main_navigation;
+let blocker;
 let settings_modal;
 let conf_modal;
 let cal_modal;
@@ -13,96 +15,19 @@ let controls_1;
 let controls_2;
 let controls_3;
 let astrt;
-let device_id;
+let current_device;
+let current_ws;
 let ws_console;
 let title;
 let sett_form;
 let conf_form;
-
-function setDevice(device) {
-    device_id = device;
-}
-
-async function loadInitalData(device_id) {
-    let result = await awaitRequest('GET', device_id + "/sett").catch(function (e) {
-        return false;
-    });
-    if (result.status === 200) {
-        result = JSON.parse(result.response);
-        title.innerHTML = result.name;
-        if (result.strt === 0){
-            astrt.checked = false;
-        } else if (result.strt === 1) {
-            astrt.checked = true;
-        }
-        return true;
-    } else {
-        return false;
-    }
-}
-
-window.addEventListener("DOMContentLoaded", function (e) {
-    settings_modal = document.getElementById('settings_modal');
-    conf_modal = document.getElementById('conf_modal');
-    cal_modal = document.getElementById('cal_modal');
-    mode_a_conf = document.getElementById("mode_a");
-    mode_i_conf = document.getElementById("mode_i");
-    loader = document.getElementById("loader");
-    controls_1 = document.getElementById("control_set_1");
-    controls_2 = document.getElementById("control_set_2");
-    controls_3 = document.getElementById("control_set_3");
-    diagram_wrapper = document.getElementsByClassName('diagram_wrapper')[0];
-    help_wrapper = document.getElementsByClassName('help_wrapper')[0];
-    boundary_wrapper = document.getElementsByClassName('boundary_wrapper')[0];
-    astrt = document.getElementById("astrt");
-    title = document.getElementById("title");
-    ws_console = document.getElementById('console');
-    sett_form = document.getElementById('sett_form');
-    conf_form = document.getElementById('conf_form');
-    let content = document.getElementsByClassName('content')[0];
-    let blocker = document.getElementsByClassName('blocker')[0];
-    let subnav = document.getElementsByClassName('sub-navigation')[0];
-    let subnav_btns = subnav.getElementsByClassName('btn');
-    let checkbox = subnav.getElementsByClassName('container')[0];
-    if (device_id && loadInitalData(device_id)) {
-        openWS();
-    } else {
-        blocker.style.display = "block";
-        content.style.background = "#f5f5f5";
-        for (let btn of subnav_btns) {
-            btn.style.backgroundColor = "#f5f5f5";
-            btn.style.color = "#d0d0d0";
-            btn.style.boxShadow = "2px 2px 5px 0 rgba(0,0,0,0.15)";
-        }
-        checkbox.style.backgroundColor = "#f5f5f5";
-        checkbox.style.color = "#d0d0d0";
-        checkbox.style.boxShadow = "2px 2px 5px 0 rgba(0,0,0,0.15)";
-        ws_console.style.borderColor = "#c2c2c2";
-    }
-    window.addEventListener("click", function (e) {
-        if (e.target === settings_modal) {
-            toggleSettingsModal();
-        }
-    });
-});
-
-function openWS() {
-    let ws = new WebSocket("ws://" + window.location.hostname + ":5678/");
-    ws.addEventListener('message', function (event) {
-        let text = document.createTextNode(event.data);
-        let br = document.createElement('br');
-        ws_console.appendChild(text);
-        ws_console.appendChild(br);
-        ws_console.scrollTop = ws_console.scrollHeight
-    });
-    window.addEventListener('unload', function (event) { ws.close(1000); });
-}
+let disconnected_modal;
 
 function httpPost(uri, header, body) {
     if (uri) {
         return new Promise(function (resolve, reject) {
             let request = new XMLHttpRequest();
-            request.open("POST", uri);
+            request.open("POST", uri, true);
             if (header) {
                 request.setRequestHeader(header[0], header[1]);
             }
@@ -132,7 +57,7 @@ function httpGet(uri, header) {
     if (uri) {
         return new Promise(function (resolve, reject) {
             let request = new XMLHttpRequest();
-            request.open("GET", uri);
+            request.open("GET", uri, true);
             if (header) {
                 request.setRequestHeader(header);
             }
@@ -156,19 +81,149 @@ function httpGet(uri, header) {
 
 async function awaitRequest(method, uri, content_type, body, header) {
     let response;
+    let err;
     loader.style.display = "block";
     if (method === 'GET') {
         response = await httpGet(uri, header).catch(function (e) {
-            console.log(e);
+            err = e;
         });
     }
     if (method === 'POST') {
         response = await httpPost(uri, content_type, body).catch(function (e) {
-            console.log(e);
+            err = e;
         });
     }
     loader.style.display = "none";
-    return response;
+    return response || err;
+}
+
+window.addEventListener("DOMContentLoaded", function (e) {
+    main_navigation = document.getElementsByClassName('main-navigation')[0];
+    disconnected_modal = document.getElementById('disconnected_modal');
+    settings_modal = document.getElementById('settings_modal');
+    conf_modal = document.getElementById('conf_modal');
+    cal_modal = document.getElementById('cal_modal');
+    mode_a_conf = document.getElementById("mode_a");
+    mode_i_conf = document.getElementById("mode_i");
+    loader = document.getElementById("loader");
+    controls_1 = document.getElementById("control_set_1");
+    controls_2 = document.getElementById("control_set_2");
+    controls_3 = document.getElementById("control_set_3");
+    diagram_wrapper = document.getElementsByClassName('diagram_wrapper')[0];
+    help_wrapper = document.getElementsByClassName('help_wrapper')[0];
+    boundary_wrapper = document.getElementsByClassName('boundary_wrapper')[0];
+    astrt = document.getElementById("astrt");
+    title = document.getElementById("title");
+    ws_console = document.getElementById('console');
+    sett_form = document.getElementById('sett_form');
+    conf_form = document.getElementById('conf_form');
+    blocker = document.getElementsByClassName('blocker')[0];
+    blocker.style.display = "block";
+    window.addEventListener("click", function (e) {
+        if (e.target === settings_modal) {
+            toggleSettingsModal();
+        }
+    });
+    loadDevices();
+    setInterval(function(){pollDevices();}, 5000);
+});
+
+function setDevices(devices) {
+    devices = JSON.parse(devices);
+    if (current_device && devices.includes(current_device) === false) {
+        disconnected_modal.style.display = "block";
+    } else {
+        disconnected_modal.style.display = "none";
+        while (main_navigation.firstChild) {
+            main_navigation.removeChild(main_navigation.firstChild);
+        }
+        for (let device of devices) {
+            let btn = document.createElement('button');
+            if (device === current_device) {
+                btn.className = 'btnactive';
+            } else {
+                btn.className = 'btn';
+            }
+            btn.type = 'button';
+            btn.id = device;
+            btn.onclick = function () {
+                loadDevice(device);
+            };
+            let btn_text = document.createTextNode('Device ' + device);
+            btn.appendChild(btn_text);
+            main_navigation.appendChild(btn);
+        }
+    }
+}
+
+async function loadDevices() {
+    let result = await awaitRequest('GET', 'devices');
+    if (result.status === 200) {
+        setDevices(result.response);
+    }
+    return false;
+}
+
+function pollDevices() {
+    let request = new XMLHttpRequest();
+    request.open("GET", 'devices', true);
+    request.timeout = 15000;
+    request.onreadystatechange = function () {
+        if (request.readyState === 4) {
+            if (request.status === 200) {
+                setDevices(request.response)
+            }
+        }
+    };
+    request.send();
+}
+
+async function loadDevice(device_id) {
+    if (current_ws !== undefined) {
+        current_ws.close(1000);
+        current_ws = undefined;
+        while (ws_console.firstChild) {
+            ws_console.removeChild(ws_console.firstChild);
+        }
+    }
+    let result = await awaitRequest('GET', 'devices/' + device_id);
+    if (result.status === 200) {
+        let result2 = await awaitRequest('POST', 'devices/' + device_id + '/co');
+        if (result2.status === 200) {
+            current_device = device_id;
+            let btn = document.getElementById(current_device);
+            btn.className = 'btnactive';
+            result = JSON.parse(result.response);
+            title.innerHTML = result.name;
+            if (result.strt === 0){
+                astrt.checked = false;
+            } else if (result.strt === 1) {
+                astrt.checked = true;
+            }
+            current_ws = openWS();
+            blocker.style.display = "none";
+            return true;
+        }
+    }
+    location.href=('');
+    return false;
+}
+
+function openWS() {
+    let ws = new WebSocket("ws://" + window.location.hostname + ":5678/");
+    ws.addEventListener('message', function (event) {
+        let text = document.createTextNode(event.data);
+        let br = document.createElement('br');
+        ws_console.appendChild(text);
+        ws_console.appendChild(br);
+        ws_console.scrollTop = ws_console.scrollHeight
+    });
+    window.addEventListener('unload', function (event) { ws.close(1000); });
+    return ws;
+}
+
+async function btnRequest(method, endpoint) {
+    awaitRequest(method, 'devices/' + current_device + '/' + endpoint);
 }
 
 async function toggleAstrt(box) {
@@ -182,9 +237,7 @@ async function toggleAstrt(box) {
             state: 0
         });
     }
-    let res = await awaitRequest('POST', device_id + "/as", ["Content-type", "application/json"], data).catch(function (e) {
-        console.log(e);
-    });
+    let res = await awaitRequest('POST', 'devices/' + current_device + "/as", ["Content-type", "application/json"], data);
     if (res.status === 200) {
         res = JSON.parse(res.response);
         if (res.state === 0){
@@ -199,9 +252,7 @@ async function toggleAstrt(box) {
 
 async function toggleSettingsModal() {
     if (settings_modal.style.display === "none" || settings_modal.style.display === "") {
-        let result = await awaitRequest('GET', device_id + "/sett").catch(function (e) {
-            return false;
-        });
+        let result = await awaitRequest('GET', 'devices/' + current_device);
         if (result.status === 200) {
             sett_form.prev_sett.value = result.response;
             setSettings(result.response);
@@ -225,7 +276,7 @@ async function submitSettings(form) {
         name: form.name.value,
         rpkwh: form.rpkwh.value
     });
-    let response = await awaitRequest('POST', device_id + "/sett", ["Content-type", "application/json"], data);
+    let response = await awaitRequest('POST', 'devices/' + current_device, ["Content-type", "application/json"], data);
     if (response.status === 200) {
         toggleSettingsModal();
     } else {
@@ -236,9 +287,7 @@ async function submitSettings(form) {
 
 async function toggleConfModal() {
     if (conf_modal.style.display === "none" || conf_modal.style.display === "") {
-        let result = await awaitRequest('GET', device_id + "/conf").catch(function (e) {
-            return false;
-        });
+        let result = await awaitRequest('GET', 'devices/' + current_device + "/conf");
         if (result.status === 200) {
             conf_form.prev_conf.value = result.response;
             setConf(result.response);
@@ -300,7 +349,7 @@ async function submitConf(form) {
         dt: form.dt.value,
         ndt: form.ndt.value
     });
-    let response = await awaitRequest('POST', device_id + "/conf", ["Content-type", "application/json"], data);
+    let response = await awaitRequest('POST', 'devices/' + current_device + "/conf", ["Content-type", "application/json"], data);
     if (response.status === 200) {
         toggleConfModal();
     } else {
@@ -340,7 +389,7 @@ function toggleCalModal() {
         boundary_wrapper.style.display = "none";
         cal_modal.style.display = "none";
         conf_modal.style.display = "block";
-        httpPost(device_id + '/stp');
+        httpPost(current_device + '/stp');
     }
 }
 
@@ -390,7 +439,7 @@ function buildHistogram(data) {
 
 async function updateHST() {
     loader.style.display = "block";
-    let result = await httpGet(device_id + "/hst").catch(function (e) {
+    let result = await httpGet(current_device + "/hst").catch(function (e) {
         console.log(e);
     });
     if (result) {
@@ -401,7 +450,7 @@ async function updateHST() {
 
 async function updateBoundaries() {
     loader.style.display = "block";
-    let result = await httpGet(device_id + "/fb").catch(function (e) {
+    let result = await httpGet(current_device + "/fb").catch(function (e) {
         console.log(e);
     });
     if (result) {
@@ -411,7 +460,7 @@ async function updateBoundaries() {
 }
 
 async function startCal() {
-    httpPost(device_id + "/fb").catch(function (e) {
+    httpPost(current_device + "/fb").catch(function (e) {
         console.log(e);
     });
     boundary_wrapper.style.display = "block";
@@ -422,14 +471,14 @@ async function startCal() {
 
 async function startHST() {
     loader.style.display = "block";
-    let result = await httpGet(device_id + "/fb").catch(function (e) {
+    let result = await httpGet(current_device + "/fb").catch(function (e) {
         console.log(e);
     });
     if (result) {
         boundary_wrapper.innerHTML = result;
     }
     loader.style.display = "none";
-    httpPost(device_id + '/stp');
+    httpPost(current_device + '/stp');
     while (diagram_wrapper.firstChild) {
         diagram_wrapper.removeChild(diagram_wrapper.firstChild);
     }
