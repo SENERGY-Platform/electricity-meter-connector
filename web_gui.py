@@ -44,24 +44,46 @@ class WebGUI(Thread):
     def index():
         devices = SerialManager.getDevices()
         devices.sort()
-        return render_template('gui.html', devices=devices)
+        return render_template('gui.html')
 
     @staticmethod
-    @app.route('/<d_id>', methods=['GET'])
-    def device(d_id):
+    @app.route('/devices', methods=['GET'])
+    def devices():
         devices = SerialManager.getDevices()
         devices.sort()
+        return Response(status=200, response=json.dumps(devices))
+
+    @staticmethod
+    @app.route('/devices/<d_id>', methods=['POST', 'GET'])
+    def device(d_id):
+        try:
+            controller = SerialManager.getController(d_id)
+            if controller:
+                if request.method == 'POST':
+                    sett = request.get_json()
+                    controller.setSettings(sett['rpkwh'], sett['tkwh'], sett['name'])
+                if request.method == 'GET':
+                    sett = controller.getSettings()
+                return Response(status=200, response=json.dumps(sett))
+        except Exception as ex:
+            logger.error(ex)
+        return Response(status=500)
+
+    @staticmethod
+    @app.route('/devices/<d_id>/co', methods=['POST'])
+    def consoleOutput(d_id):
         try:
             controller = SerialManager.getController(d_id)
             if controller:
                 WebsocketConsole.setSource(controller.log_file)
-                return render_template('gui.html', devices=devices, d_id=d_id)
+                time.sleep(0.5)
+                return Response(status=200)
         except Exception as ex:
             logger.error(ex)
-        return render_template('gui.html', devices=devices)
+        return Response(status=500)
 
     @staticmethod
-    @app.route('/<d_id>/rs', methods=['POST'])
+    @app.route('/devices/<d_id>/rs', methods=['POST'])
     def readSensor(d_id):
         try:
             controller = SerialManager.getController(d_id)
@@ -75,7 +97,7 @@ class WebGUI(Thread):
         return Response(status=500)
 
     @staticmethod
-    @app.route('/<d_id>/dbg', methods=['POST'])
+    @app.route('/devices/<d_id>/dbg', methods=['POST'])
     def startDebug(d_id):
         try:
             controller = SerialManager.getController(d_id)
@@ -89,7 +111,7 @@ class WebGUI(Thread):
         return Response(status=500)
 
     @staticmethod
-    @app.route('/<d_id>/strt', methods=['POST'])
+    @app.route('/devices/<d_id>/strt', methods=['POST'])
     def startDetection(d_id):
         try:
             controller = SerialManager.getController(d_id)
@@ -103,7 +125,7 @@ class WebGUI(Thread):
         return Response(status=500)
 
     @staticmethod
-    @app.route('/<d_id>/stp', methods=['POST'])
+    @app.route('/devices/<d_id>/stp', methods=['POST'])
     def stopAction(d_id):
         try:
             controller = SerialManager.getController(d_id)
@@ -117,7 +139,7 @@ class WebGUI(Thread):
         return Response(status=500)
 
     @staticmethod
-    @app.route('/<d_id>/as', methods=['POST'])
+    @app.route('/devices/<d_id>/as', methods=['POST'])
     def setAutoStart(d_id):
         try:
             controller = SerialManager.getController(d_id)
@@ -130,7 +152,7 @@ class WebGUI(Thread):
         return Response(status=500)
 
     @staticmethod
-    @app.route('/<d_id>/res', methods=['POST'])
+    @app.route('/devices/<d_id>/res', methods=['POST'])
     def resetController(d_id):
         try:
             controller = SerialManager.getController(d_id)
@@ -144,7 +166,7 @@ class WebGUI(Thread):
         return Response(status=500)
 
     @staticmethod
-    @app.route('/<d_id>/fb', methods=['POST', 'GET'])
+    @app.route('/devices/<d_id>/fb', methods=['POST', 'GET'])
     def getBoundaries(d_id):
         try:
             controller = SerialManager.getController(d_id)
@@ -161,7 +183,7 @@ class WebGUI(Thread):
         return Response(status=500)
 
     @staticmethod
-    @app.route('/<d_id>/hst', methods=['POST', 'GET'])
+    @app.route('/devices/<d_id>/hst', methods=['POST', 'GET'])
     def getHistogram(d_id):
         try:
             controller = SerialManager.getController(d_id)
@@ -179,7 +201,7 @@ class WebGUI(Thread):
         return Response(status=500)
 
     @staticmethod
-    @app.route('/<d_id>/conf', methods=['POST', 'GET'])
+    @app.route('/devices/<d_id>/conf', methods=['POST', 'GET'])
     def conf(d_id):
         try:
             controller = SerialManager.getController(d_id)
@@ -193,22 +215,6 @@ class WebGUI(Thread):
                     event.set()
                 event.wait(timeout=15)
                 return Response(status=event.status, response=json.dumps(conf))
-        except Exception as ex:
-            logger.error(ex)
-        return Response(status=500)
-
-    @staticmethod
-    @app.route('/<d_id>/sett', methods=['POST', 'GET'])
-    def settings(d_id):
-        try:
-            controller = SerialManager.getController(d_id)
-            if controller:
-                if request.method == 'POST':
-                    sett = request.get_json()
-                    controller.setSettings(sett['rpkwh'], sett['tkwh'], sett['name'])
-                if request.method == 'GET':
-                    sett = controller.getSettings()
-                return Response(status=200, response=json.dumps(sett))
         except Exception as ex:
             logger.error(ex)
         return Response(status=500)
