@@ -7,12 +7,20 @@
 	<meta name="description" content="" />
 	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css')|autoversion }}">
 	<script src="{{ url_for('static', filename='gui.js')|autoversion }}"></script>
-	{% if d_id %}
-	<script>setDevice('{{ d_id }}')</script>
-	{% endif %}
 </head>
 
 <body>
+
+<div id="disconnected_modal" class="modal">
+	<div class="modal-content">
+		<span>
+			Device disconnected. Please check device.<br>
+			<div id="loader_reconnect"></div>
+			Waiting for device to reconnect...
+		</span>
+		<button id="reload_btn" class="btn" type="button" onclick="location.href=('');">Cancel</button>
+	</div>
+</div>
 
 <div id="settings_modal" class="modal">
 	<div class="modal-content">
@@ -75,23 +83,12 @@
 <div class="wrapper">
 
 	<div class="header" id="title">
-		{% if not d_id %}
 		Ferraris Sensor Gateway
-		{% endif %}
     </div><!-- .header-->
 
 	<div class="blocker"></div>
 
-	<div class="main-navigation">
-		<button class="btn" type="button" onclick="location.reload();">Refresh Devices</button><br><br>
-		{% for device in devices %}
-		{% if device == d_id %}
-		<button class="btnactive" type="button" onclick="location.href=('{{ device }}');">Device {{ device }}</button>
-		{% else %}
-		<button class="btn" type="button" onclick="location.href=('{{ device }}');">Device {{ device }}</button>
-		{% endif %}
-		{% endfor %}
-	</div>
+	<div class="main-navigation"></div>
 
 	<div class="content">
 		<img id="logo" src="{{ url_for('static', filename='logo.svg') }}">
@@ -99,13 +96,13 @@
 	</div>
 
 	<div class="sub-navigation">
-		<button class="btn" type="button" id="rs_btn" onclick="awaitRequest('POST', '{{ d_id }}/rs');">Read Sensor</button>
-		<button class="btn" type="button" id="dbg_btn" onclick="awaitRequest('POST', '{{ d_id }}/dbg');">Debug Detection</button>
-		<button class="btn" type="button" id="strt_btn" onclick="awaitRequest('POST', '{{ d_id }}/strt');">Start Detection</button>
-		<button class="btn" type="button" id="stp_btn" onclick="awaitRequest('POST', '{{ d_id }}/stp');">Stop Current Action</button>
+		<button class="btn" type="button" id="rs_btn" onclick="btnRequest('POST', 'rs');">Read Sensor</button>
+		<button class="btn" type="button" id="dbg_btn" onclick="btnRequest('POST', 'dbg');">Debug Detection</button>
+		<button class="btn" type="button" id="strt_btn" onclick="btnRequest('POST', 'strt');">Start Detection</button>
+		<button class="btn" type="button" id="stp_btn" onclick="btnRequest('POST', 'stp');">Stop Current Action</button>
 		<br><br>
 		<button class="btn" type="button" onclick="toggleSettingsModal();">Settings</button>
-		<button class="btn" type="button" id="res_btn" onclick="awaitRequest('POST', '{{ d_id }}/res');">Reset</button>
+		<button class="btn" type="button" id="res_btn" onclick="btnRequest('POST', 'res');">Reset</button>
 		<label class="container">Autostart
 			<input id="astrt" type="checkbox" onclick="toggleAstrt(this);">
 			<span class="checkmark"></span>
