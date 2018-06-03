@@ -14,6 +14,7 @@ let help_wrapper;
 let controls_1;
 let controls_2;
 let controls_3;
+let controls_4;
 let astrt;
 let current_device;
 let current_ws;
@@ -21,7 +22,10 @@ let ws_console;
 let title;
 let sett_form;
 let conf_form;
+let hst_form;
+let cal_form;
 let disconnected_modal;
+let loader_cal;
 
 function httpPost(uri, header, body) {
     if (uri) {
@@ -106,9 +110,11 @@ window.addEventListener("DOMContentLoaded", function (e) {
     mode_a_conf = document.getElementById("mode_a");
     mode_i_conf = document.getElementById("mode_i");
     loader = document.getElementById("loader");
+    loader_cal = document.getElementById("loader_cal");
     controls_1 = document.getElementById("control_set_1");
     controls_2 = document.getElementById("control_set_2");
     controls_3 = document.getElementById("control_set_3");
+    controls_4 = document.getElementById("control_set_4");
     diagram_wrapper = document.getElementsByClassName('diagram_wrapper')[0];
     help_wrapper = document.getElementsByClassName('help_wrapper')[0];
     boundary_wrapper = document.getElementsByClassName('boundary_wrapper')[0];
@@ -117,6 +123,8 @@ window.addEventListener("DOMContentLoaded", function (e) {
     ws_console = document.getElementById('console');
     sett_form = document.getElementById('sett_form');
     conf_form = document.getElementById('conf_form');
+    hst_form = document.getElementById('hst_form');
+    cal_form = document.getElementById('cal_form');
     blocker = document.getElementsByClassName('blocker')[0];
     blocker.style.display = "block";
     window.addEventListener("click", function (e) {
@@ -179,6 +187,7 @@ function pollDevices() {
 }
 
 async function loadDevice(device_id) {
+    astrt.checked = false;
     if (current_ws !== undefined) {
         current_ws.close(1000);
         current_ws = undefined;
@@ -278,6 +287,7 @@ async function submitSettings(form) {
     });
     let response = await awaitRequest('POST', 'devices/' + current_device, ["Content-type", "application/json"], data);
     if (response.status === 200) {
+        title.innerHTML = form.name.value;
         toggleSettingsModal();
     } else {
         setSettings(form.prev_sett.value);
@@ -358,38 +368,30 @@ async function submitConf(form) {
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function toggleCalModal() {
+async function toggleCalModal(stp=true) {
     if (cal_modal.style.display === "none" || cal_modal.style.display === "") {
         conf_modal.style.display = "none";
-        help_wrapper.style.display = "block";
         controls_1.style.display = "block";
         cal_modal.style.display = "block";
+        let res = await awaitRequest('POST', 'devices/' + current_device + "/fb");
+        if (res.status === 200) {
+            loader_cal.style.display = "block";
+            help_wrapper.innerHTML = "Detecting brightest and darkest points.<br><br>Please wait for at least one full rotation before clicking 'Next'.";
+            controls_1.style.display = "block";
+        } else {
+            help_wrapper.innerHTML = "Unable to start calibration. Device busy?";
+        }
     } else {
         controls_1.style.display = "none";
         controls_2.style.display = "none";
         controls_3.style.display = "none";
-        help_wrapper.style.display = "none";
         diagram_wrapper.style.display = "none";
-        boundary_wrapper.style.display = "none";
+        controls_4.style.display = "none";
         cal_modal.style.display = "none";
         conf_modal.style.display = "block";
-        httpPost(current_device + '/stp');
+        if (stp) {
+            await awaitRequest('POST', 'devices/' + current_device + "/stp");
+        }
     }
 }
 
@@ -415,6 +417,27 @@ function buildDiaElement(lb, rb, val, highest, res) {
     label.appendChild(text);
     element.appendChild(bar);
     element.appendChild(label);
+    element.addEventListener("click", function (e) {
+        let bars = diagram_wrapper.querySelectorAll('[class="diagram_element_bar"]');
+        for (let item of bars) {
+            item.style.background = null;
+        }
+        let old_inputs = cal_form.querySelectorAll('[type="hidden"]');
+        for (let item of old_inputs) {
+            cal_form.removeChild(item);
+        }
+        let lb_field = document.createElement('input');
+        lb_field.id = 'lb';
+        lb_field.setAttribute('type', 'hidden');
+        lb_field.value = lb;
+        let rb_field = document.createElement('input');
+        rb_field.id = 'rb';
+        rb_field.setAttribute('type', 'hidden');
+        rb_field.value = rb;
+        cal_form.appendChild(lb_field);
+        cal_form.appendChild(rb_field);
+        bar.style.background = "#db0006";
+    });
     return element;
 }
 
@@ -436,58 +459,51 @@ function buildHistogram(data) {
     }
 }
 
-
-async function updateHST() {
-    loader.style.display = "block";
-    let result = await httpGet(current_device + "/hst").catch(function (e) {
-        console.log(e);
-    });
-    if (result) {
-        buildHistogram(result);
+async function getFB() {
+    let res = await awaitRequest('POST', 'devices/' + current_device + "/stp");
+    if (res.status === 200) {
+        loader_cal.style.display = "none";
+        controls_1.style.display = "none";
+        let points = JSON.parse(res.response)['res'].split(':');
+        help_wrapper.innerHTML = "Lowest point: "+ points[0] +"<br><br>Brightest point: "+ points[1] +"<br><br>Please enter the desired number of intervals and press 'Next' to continue calibration.";
+        hst_form.lowest.value = points[0];
+        hst_form.highest.value = points[1];
+        hst_form.intervals.value = 6;
+        controls_2.style.display = "block";
     }
-    loader.style.display = "none";
 }
 
-async function updateBoundaries() {
-    loader.style.display = "block";
-    let result = await httpGet(current_device + "/fb").catch(function (e) {
-        console.log(e);
+async function startHST(form) {
+    let data = JSON.stringify({
+        lb: form.lowest.value,
+        rb: form.highest.value,
+        res: form.intervals.value
     });
-    if (result) {
-        boundary_wrapper.innerHTML = result;
+    let response = await awaitRequest('POST', 'devices/' + current_device + "/hst", ["Content-type", "application/json"], data);
+    if (response.status === 200) {
+        controls_2.style.display = "none";
+        loader_cal.style.display = "block";
+        help_wrapper.innerHTML = "Detecting intervals.<br><br>Please wait for at least one full rotation before clicking 'Next'.";
+        controls_3.style.display = "block";
+    } else {
+        help_wrapper.innerHTML = "Unable to detect intervals. Device busy?";
     }
-    loader.style.display = "none";
 }
 
-async function startCal() {
-    httpPost(current_device + "/fb").catch(function (e) {
-        console.log(e);
-    });
-    boundary_wrapper.style.display = "block";
-    controls_1.style.display = "none";
-    controls_2.style.display = "block";
-
+async function getHST() {
+    let res = await awaitRequest('POST', 'devices/' + current_device + "/stp");
+    if (res.status === 200) {
+        loader_cal.style.display = "none";
+        controls_3.style.display = "none";
+        controls_4.style.display = "block";
+        help_wrapper.innerHTML = "The highest bar residing in the left half of the diagram corresponds to the disk's red mark.<br><br>Please select the appropriate bar and click 'Finish'.";
+        buildHistogram(JSON.parse(res.response)['res']);
+        diagram_wrapper.style.display = "block";
+    }
 }
 
-async function startHST() {
-    loader.style.display = "block";
-    let result = await httpGet(current_device + "/fb").catch(function (e) {
-        console.log(e);
-    });
-    if (result) {
-        boundary_wrapper.innerHTML = result;
-    }
-    loader.style.display = "none";
-    httpPost(current_device + '/stp');
-    while (diagram_wrapper.firstChild) {
-        diagram_wrapper.removeChild(diagram_wrapper.firstChild);
-    }
-    boundary_wrapper.style.display = "none";
-    diagram_wrapper.style.display = "block";
-    controls_2.style.display = "none";
-    controls_3.style.display = "block";
-}
-
-async function finishCal() {
-    toggleCalModal()
+async function finishCal(form) {
+    conf_form.lb.value = form.lb.value;
+    conf_form.rb.value = form.rb.value;
+    toggleCalModal(false);
 }
