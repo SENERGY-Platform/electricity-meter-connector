@@ -504,7 +504,9 @@ async function getHST() {
 }
 
 async function finishCal(form) {
-    conf_form.lb.value = form.lb.value;
-    conf_form.rb.value = form.rb.value;
-    toggleCalModal(false);
+    if (conf_form.lb.value && conf_form.rb.value) {
+        conf_form.lb.value = form.lb.value;
+        conf_form.rb.value = form.rb.value;
+        toggleCalModal(false);
+    }
 }
