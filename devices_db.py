@@ -19,7 +19,7 @@ class DevicesDatabase(metaclass=Singleton):
         ('lb', 'INTEGER DEFAULT 0'),
         ('rb', 'INTEGER DEFAULT 0'),
         ('dt', 'INTEGER DEFAULT 50'),
-        ('ndt', 'INTEGER DEFAULT 150'),
+        ('ndt', 'INTEGER DEFAULT 500'),
         ('strt', 'INTEGER DEFAULT 0'),
         ('rpkwh', 'INTEGER DEFAULT 0'),
         ('kwh', 'TEXT DEFAULT "0.0"'),
