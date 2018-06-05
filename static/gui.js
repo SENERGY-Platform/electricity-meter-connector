@@ -189,12 +189,17 @@ function pollDevices() {
 async function loadDevice(device_id) {
     title.innerHTML = "Ferraris Sensor Gateway";
     astrt.checked = false;
+    current_device = undefined;
     if (current_ws !== undefined) {
         current_ws.close(1000);
         current_ws = undefined;
         while (ws_console.firstChild) {
             ws_console.removeChild(ws_console.firstChild);
         }
+    }
+    let current_btns = main_navigation.getElementsByTagName('button');
+    for (let item of current_btns) {
+        item.className = 'btn';
     }
     let result = await awaitRequest('GET', 'devices/' + device_id);
     if (result.status === 200) {
