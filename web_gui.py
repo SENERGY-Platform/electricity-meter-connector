@@ -31,7 +31,7 @@ class WebGUI(Thread):
 
     def run(self):
         logger.info("starting on port {}".format(self._port))
-        __class__.app.run(host=self._host, port=self._port)
+        __class__.app.run(host=self._host, port=self._port, threaded=True, use_reloader=False)
 
     @staticmethod
     def callbk(event, status, msg=None):
