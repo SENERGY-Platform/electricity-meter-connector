@@ -105,7 +105,7 @@ body {
     padding-left: 15px;
     padding-top: 15px;
     padding-bottom: 15px;
-    overflow-y: scroll;
+    overflow-y: auto;
     z-index: 4;
     background: #efefef;
     -webkit-box-shadow: 3px 0 7px 0 rgba(0,0,0,0.30);
@@ -152,7 +152,7 @@ body {
     right: 0;
     bottom: 0;
     padding: 15px;
-    overflow-y: scroll;
+    overflow-y: auto;
     border-style: dotted;
     border-width: 1px;
     font-size: 14px;
@@ -600,22 +600,20 @@ input[type=submit]:hover {
     100% { transform: rotate(360deg); }
 }
 
-/* width */
+/*
 ::-webkit-scrollbar {
     width: 10px;
 }
 
-/* Track */
 ::-webkit-scrollbar-track {
     background: #efefef;
 }
 
-/* Handle */
 ::-webkit-scrollbar-thumb {
     background: #888;
 }
 
-/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
+/*
