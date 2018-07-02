@@ -434,6 +434,7 @@ input[type=submit]:hover {
 
 .toggle {
     -webkit-appearance: none;
+    -moz-appearance: none;
     width: 444px;
     height: 50px;
     display: inline-block;
@@ -451,12 +452,12 @@ input[type=submit]:hover {
 
 .toggle:before {
     content: "Average Interval";
-    display: block;
+    display: inline-block;
     position: absolute;
     z-index: 2;
     width: 215px;
     height: 40px;
-    background: gainsboro;
+    background-color: gainsboro;
     left: 5px;
     top: 5px;
     font: 16px/42px Arial, sans-serif;
@@ -469,7 +470,7 @@ input[type=submit]:hover {
 }
 
 .toggle:hover:before {
-    background: #3e8e41;
+    background-color: #3e8e41;
 }
 
 .toggle:checked:before {
