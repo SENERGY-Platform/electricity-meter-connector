@@ -162,9 +162,10 @@ body {
 
 #info {
     position: absolute;
-    bottom: 14px;
+    bottom: 18px;
     right: 15px;
-    font-size: 10px;
+    font-size: 8px;
+    line-height: 11px;
     color: #D3D3D3;
     text-align: right;
     z-index: 4;
