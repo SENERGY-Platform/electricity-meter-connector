@@ -2,8 +2,8 @@ try:
     from connector_client.client import Client
     from connector_client.device import Device
     from connector_client.modules.device_pool import DevicePool
-    from devices_db import DevicesDatabase
-    from logger import root_logger
+    from serial_gateway.devices_db import DevicesDatabase
+    from serial_gateway.logger import root_logger
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 from serial import SerialException, SerialTimeoutException

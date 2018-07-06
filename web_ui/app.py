@@ -1,8 +1,9 @@
 try:
     from flask import Flask, render_template, Response, request
-    from serial_manager import SerialManager
-    from ws_console import WebsocketConsole
-    from logger import root_logger, connector_client_log_handler
+    from serial_gateway.manager import SerialManager
+    from web_ui.ws_console import WebsocketConsole
+    from serial_gateway.logger import root_logger, connector_client_log_handler
+    from connector_client.configuration import VERSION
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 from threading import Thread, Event
@@ -14,13 +15,22 @@ werkzeug_logger = logging.getLogger('werkzeug')
 werkzeug_logger.addHandler(connector_client_log_handler)
 werkzeug_logger.setLevel(logging.WARNING)
 
+
+def read_version():
+    values = dict()
+    with open('serial_gateway/__init__.py', 'r') as init_file:
+        exec(init_file.read(), values)
+    return values.get('__version__')
+logger.info(read_version())
+
+
 class DeviceEvent(Event):
     def __init__(self):
         super().__init__()
         self.status = None
         self.message = None
 
-class WebGUI(Thread):
+class WebUI(Thread):
     app = Flask(__name__)
 
     def __init__(self):

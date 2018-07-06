@@ -1,8 +1,8 @@
 try:
     from connector_client.modules.singleton import SimpleSingleton
-    from device_controller import DeviceController
-    from devices_db import DevicesDatabase
-    from logger import root_logger
+    from serial_gateway.device_controller import DeviceController
+    from serial_gateway.devices_db import DevicesDatabase
+    from serial_gateway.logger import root_logger
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 import serial

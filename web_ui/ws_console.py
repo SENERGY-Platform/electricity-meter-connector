@@ -1,6 +1,6 @@
 try:
     import websockets
-    from logger import root_logger
+    from serial_gateway.logger import root_logger
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 

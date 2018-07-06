@@ -1,5 +1,5 @@
 try:
-    from logger import root_logger
+    from serial_gateway.logger import root_logger
     from connector_client.modules.singleton import Singleton
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))

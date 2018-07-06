@@ -1,9 +1,9 @@
 try:
     from connector_client.client import Client
     from connector_client.modules.device_pool import DevicePool
-    from serial_manager import SerialManager
-    from ws_console import WebsocketConsole
-    from web_gui import WebGUI
+    from serial_gateway.manager import SerialManager
+    from web_ui.ws_console import WebsocketConsole
+    from web_ui.app import WebUI
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 import asyncio
@@ -16,6 +16,6 @@ cw = asyncio.get_child_watcher()
 if __name__ == '__main__':
     connector_client = Client(device_manager=DevicePool)
     WebsocketConsole(loop)
-    WebGUI()
+    WebUI()
     SerialManager()
     loop.run_forever()
