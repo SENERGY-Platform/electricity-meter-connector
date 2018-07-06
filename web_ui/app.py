@@ -16,12 +16,17 @@ werkzeug_logger.addHandler(connector_client_log_handler)
 werkzeug_logger.setLevel(logging.WARNING)
 
 
-def read_version():
+def read_sg_version():
     values = dict()
     with open('serial_gateway/__init__.py', 'r') as init_file:
         exec(init_file.read(), values)
     return values.get('__version__')
-logger.info(read_version())
+
+def read_ui_version():
+    values = dict()
+    with open('web_ui/__init__.py', 'r') as init_file:
+        exec(init_file.read(), values)
+    return values.get('__version__')
 
 
 class DeviceEvent(Event):
@@ -54,7 +59,7 @@ class WebUI(Thread):
     def index():
         devices = SerialManager.getDevices()
         devices.sort()
-        return render_template('gui.html')
+        return render_template('gui.html', sg_v=read_sg_version(), ui_v=read_ui_version(), cc_v=VERSION)
 
     @staticmethod
     @app.route('/devices', methods=['GET'])

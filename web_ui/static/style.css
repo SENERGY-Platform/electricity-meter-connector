@@ -160,6 +160,16 @@ body {
     z-index: 2;
 }
 
+#info {
+    position: absolute;
+    bottom: 14px;
+    right: 15px;
+    font-size: 10px;
+    color: #D3D3D3;
+    text-align: right;
+    z-index: 4;
+}
+
 
 /* Buttons etc.
 -----------------------------------------------------------------------------*/
