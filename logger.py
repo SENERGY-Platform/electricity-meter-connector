@@ -1,5 +1,5 @@
 try:
-    from modules.logger import connector_client_log_handler
+    from connector_client.modules.logger import connector_client_log_handler
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 import logging

@@ -1,6 +1,6 @@
 try:
     from logger import root_logger
-    from modules.singleton import Singleton
+    from connector_client.modules.singleton import Singleton
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 import inspect, os, sqlite3

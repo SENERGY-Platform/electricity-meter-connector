@@ -1,7 +1,7 @@
 try:
-    from connector.client import Client
-    from connector.device import Device
-    from modules.device_pool import DevicePool
+    from connector_client.client import Client
+    from connector_client.device import Device
+    from connector_client.modules.device_pool import DevicePool
     from devices_db import DevicesDatabase
     from logger import root_logger
 except ImportError as ex:
