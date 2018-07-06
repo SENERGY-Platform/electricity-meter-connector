@@ -1,3 +1,0 @@
-[submodule "connector_client"]
-	path = connector_client
-	url = git@gitlab.wifa.uni-leipzig.de:fg-seits/connector-client.git
