@@ -1,0 +1,5 @@
+__pycache__
+sepl-connector-client
+devices
+devices.sqlite
+.python-version
