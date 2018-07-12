@@ -83,6 +83,10 @@ class SerialManager(SimpleSingleton, Thread):
                 return controller
 
     @staticmethod
+    def getControllers() -> list:
+        return list(__class__.__port_controller_map.values())
+
+    @staticmethod
     def getDevices() -> list:
         try:
             return [val._id for val in __class__.__port_controller_map.values()]
