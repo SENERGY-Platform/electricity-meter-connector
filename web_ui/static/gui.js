@@ -35,7 +35,7 @@ function httpPost(uri, header, body) {
             if (header) {
                 request.setRequestHeader(header[0], header[1]);
             }
-            request.timeout = 15000;
+            request.timeout = 25000;
             request.onreadystatechange = function () {
                 if (request.readyState === 4) {
                     if (request.status === 200) {
@@ -65,7 +65,7 @@ function httpGet(uri, header) {
             if (header) {
                 request.setRequestHeader(header);
             }
-            request.timeout = 15000;
+            request.timeout = 25000;
             request.onreadystatechange = function () {
                 if (request.readyState === 4) {
                     if (request.status === 200) {
