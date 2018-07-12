@@ -10,7 +10,7 @@ from serial import SerialException, SerialTimeoutException
 from threading import Thread
 from queue import Queue, Empty
 from enum import Enum
-import logging, os, inspect, json, datetime
+import logging, os, inspect
 
 
 logger = root_logger.getChild(__name__)
@@ -37,6 +37,7 @@ class DeviceController(Thread):
         super().__init__()
         self._serial_con = serial_con
         self._id = dip_id
+        self._extended_id = "{}-{}".format(self._id, ID_PREFIX)
         self._callbk = callbk
         self._commands = Queue()
         self._serial_logger = serial_logger.getChild(self._id)
@@ -46,7 +47,7 @@ class DeviceController(Thread):
             log_handler.setFormatter(logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%m.%d.%Y %I:%M:%S %p'))
             self._serial_logger.addHandler(log_handler)
         if self._loadDeviceInfo():
-            self._device = Device("{}-{}".format(self._id, ID_PREFIX), "iot#fd0e1327-d713-41da-adfb-e3853a71db3b", self._meter_name)
+            self._device = Device(self._extended_id, "iot#fd0e1327-d713-41da-adfb-e3853a71db3b", self._meter_name)
             self._device.addTag("type1", "Ferraris Meter")
             self._device.addTag("type2", "Optical Sensor")
             self.start()
@@ -394,8 +395,9 @@ class DeviceController(Thread):
                     msg = self._serial_con.readline()
                     if 'DET' in msg.decode():
                         self._calcAndWriteTotal(1 / int(self._rpkwh))
+                        """
                         Client.event(
-                            "{}-{}".format(self._id, ID_PREFIX),
+                            self._extended_id,
                             'detection',
                             json.dumps({
                                 'value': self._kwh,
@@ -404,6 +406,7 @@ class DeviceController(Thread):
                             }),
                             block=False
                         )
+                        """
                     elif 'CAL' in msg.decode():
                         self._writeSerialLog('CAL', 'D')
                     try:
