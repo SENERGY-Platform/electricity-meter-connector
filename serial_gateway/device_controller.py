@@ -400,7 +400,7 @@ class DeviceController(Thread):
                             json.dumps({
                                 'value': self._kwh,
                                 'unit': 'kWh',
-                                'time': datetime.datetime.utcnow().isoformat()
+                                'time': '{}Z'.format(datetime.datetime.utcnow().isoformat())
                             }),
                             block=False
                         )
