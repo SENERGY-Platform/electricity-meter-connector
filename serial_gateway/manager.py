@@ -27,26 +27,28 @@ class SerialManager(SimpleSingleton, Thread):
         try:
             logger.debug("trying to open '{}'".format(port))
             serial_con = serial.Serial(port, timeout=15)
-            rdy_msg = serial_con.readline()
-            if 'RDY' in rdy_msg.decode():
-                logger.debug("device on '{}' ready".format(port))
-                serial_con.timeout = 5
-                return serial_con
-            else:
-                serial_con.close()
-                logger.warning("no greeting from device on '{}'".format(port))
-        except serial.SerialException:
+            logger.debug(serial_con)
+            return serial_con
+        except serial.SerialException as ex:
+            logger.error(ex)
             logger.warning("device on '{}' busy or has errors".format(port))
 
-    def _getDipID(self, serial_con: serial.Serial) -> str:
+    def _getGreeting(self, serial_con: serial.Serial) -> str:
         try:
-            serial_con.write(b'ID\n')
-            id = serial_con.readline()
-            if id:
-                return id.decode().replace('\n', '').replace('\r', '')
-        except (serial.SerialException, serial.SerialTimeoutException) as ex:
+            greeting_msg = serial_con.readline()
+            if greeting_msg:
+                greeting_msg = greeting_msg.decode().replace('\n', '').replace('\r', '')
+                logger.debug("greeting from device on '{}': {}".format(serial_con.port, greeting_msg))
+                if 'FERRARIS-SENSOR' in greeting_msg and greeting_msg.count(':') == 2:
+                    return greeting_msg
+                else:
+                    logger.warning("malformed greeting from device on '{}'".format(serial_con.port))
+            else:
+                logger.warning("no greeting from device on '{}'".format(serial_con.port))
+            serial_con.close()
+        except serial.SerialException as ex:
             logger.error(ex)
-            logger.error("could not get ID for device on '{}'".format(serial_con.port))
+            logger.error("error while waiting for greeting of device on '{}'".format(serial_con.port))
 
     def _diff(self, known, unknown):
         known_set = set(known)
@@ -63,11 +65,12 @@ class SerialManager(SimpleSingleton, Thread):
             for port in new_p:
                 serial_con = self._getSerialCon(port)
                 if serial_con:
-                    dip_id = self._getDipID(serial_con)
-                    if dip_id:
+                    greeting = self._getGreeting(serial_con)
+                    if greeting:
+                        dip_id = greeting.split(':')[-1]
                         if not __class__.getController(dip_id):
                             logger.info("connected to device '{}' on '{}'".format(dip_id, port))
-                            __class__.__port_controller_map[port] = DeviceController(serial_con, dip_id, __class__.delDevice)
+                            __class__.__port_controller_map[port] = DeviceController(serial_con, dip_id, greeting, __class__.delDevice)
                         else:
                             logger.warning("device '{}' already exists".format(dip_id))
                             serial_con.close()
