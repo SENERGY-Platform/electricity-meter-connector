@@ -33,11 +33,13 @@ class Mode(Enum):
     average = 'A'
 
 class DeviceController(Thread):
-    def __init__(self, serial_con, dip_id, callbk):
+    def __init__(self, serial_con, dip_id, greeting, callbk):
         super().__init__()
         self._serial_con = serial_con
+        self._serial_con.timeout = 5
         self._id = dip_id
         self._extended_id = "{}-{}".format(self._id, ID_PREFIX)
+        self._greeting = greeting
         self._callbk = callbk
         self._commands = Queue()
         self._serial_logger = serial_logger.getChild(self._id)
@@ -97,9 +99,10 @@ class DeviceController(Thread):
         try:
             for retry in range(retries):
                 msg = self._serial_con.readline()
+                logger.debug(msg)
                 if char in msg.decode():
                     return msg.decode()
-        except SerialException as ex:
+        except Exception as ex:
             logger.error(ex)
         return None
 
@@ -111,6 +114,7 @@ class DeviceController(Thread):
     def run(self):
         logger.debug("starting serial controller for device '{}'".format(self._id))
         self._writeSerialLog('serial connection open')
+        self._writeSerialLog(self._greeting, 'D')
         if self._waitFor('RDY'):
             self._writeSerialLog('RDY', 'D')
             logger.info("started serial controller for device '{}'".format(self._id))
