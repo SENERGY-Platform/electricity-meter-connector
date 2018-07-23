@@ -474,7 +474,7 @@ async function getFB() {
         help_wrapper.innerHTML = "Lowest point: "+ points[0] +"<br><br>Brightest point: "+ points[1] +"<br><br>Please enter the desired number of intervals and press 'Next' to continue calibration.";
         hst_form.lowest.value = points[0];
         hst_form.highest.value = points[1];
-        hst_form.intervals.value = 6;
+        hst_form.intervals.value = 10;
         controls_2.style.display = "block";
     }
 }
