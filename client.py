@@ -10,22 +10,6 @@ from threading import Thread
 import asyncio, time, json, datetime
 
 
-########### temp fix
-
-from serial_gateway.device_controller import ID_PREFIX, devices_db
-
-dt=25
-ndt=400
-devices=['62345', '12345', '17890', '67845', '12340', '12890', '67345', '12390']
-
-if ID_PREFIX == 'ee2e6f38-5efe-4818-a9bf-850490e964a9':
-    for device in devices:
-        if devices_db.getDevice(device):
-            print('{} updated'.format(device, devices_db.updateDevice(device, dt=dt, ndt=ndt)))
-
-###########
-
-
 def pushReadings():
     while True:
         for controller in SerialManager.getControllers():
