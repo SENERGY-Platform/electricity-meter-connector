@@ -38,7 +38,7 @@ class WebsocketConsole(Thread):
                             except Exception as ex:
                                 logger.error("could not send data - {}".format(ex))
                                 break
-                    except asyncio.TimeoutError:
+                    except (TimeoutError, asyncio.TimeoutError):
                         pass
                     except Exception as ex:
                         logger.error(ex)
