@@ -36,7 +36,6 @@ class DeviceController(Thread):
     def __init__(self, serial_con, dip_id, greeting, callbk):
         super().__init__()
         self._serial_con = serial_con
-        self._serial_con.timeout = 5
         self._id = dip_id
         self._extended_id = "{}-{}".format(self._id, ID_PREFIX)
         self._greeting = greeting

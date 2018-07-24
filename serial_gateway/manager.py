@@ -26,7 +26,7 @@ class SerialManager(SimpleSingleton, Thread):
     def _getSerialCon(self, port) -> serial.Serial:
         try:
             logger.debug("trying to open '{}'".format(port))
-            serial_con = serial.Serial(port, baudrate=4000000, timeout=15)
+            serial_con = serial.Serial(port, baudrate=4000000, timeout=5)
             logger.debug(serial_con)
             return serial_con
         except serial.SerialException as ex:
