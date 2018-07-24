@@ -293,13 +293,13 @@ class DeviceController(Thread):
             self._serial_con.write(b'NDMR\n')
             self._writeSerialLog('NDMR', 'C')
             callbk(200)
+            self._writeSerialLog('device output suppressed during operation')
             data = list()
-            count = 1
+            count = 0
             while True:
                 msg = self._serial_con.readline()
                 if msg:
-                    msg = msg.decode()
-                    data.append('{},{}'.format(count, msg.replace('\n', '').replace('\r', '')))
+                    data.append([count, msg])
                     count += 1
                 try:
                     command, callbk, kwargs = self._commands.get_nowait()
@@ -308,6 +308,8 @@ class DeviceController(Thread):
                         self._writeSerialLog('STP', 'C')
                         if self._waitFor('RDY'):
                             self._writeSerialLog('RDY', 'D')
+                            for x in range(len(data)):
+                                data[x][1] = int(data[x][1].decode().replace('\n', '').replace('\r', ''))
                             callbk(200, {'res': data})
                             return True
                         else:
@@ -331,6 +333,7 @@ class DeviceController(Thread):
             self._serial_con.write(b'FB\n')
             self._writeSerialLog('FB', 'C')
             callbk(200)
+            self._writeSerialLog('device output suppressed during operation')
             while True:
                 try:
                     command, callbk, kwargs = self._commands.get(timeout=1)
@@ -338,8 +341,6 @@ class DeviceController(Thread):
                         self._serial_con.write(b'STP\n')
                         self._writeSerialLog('STP', 'C')
                         result = self._waitFor(':')
-                        if result:
-                            self._writeSerialLog(result, 'D')
                         if self._waitFor('RDY'):
                             self._writeSerialLog('RDY', 'D')
                             callbk(200, {'res': result.replace('\n', '').replace('\r', '')})
@@ -374,6 +375,7 @@ class DeviceController(Thread):
                 self._writeSerialLog(resp, 'D')
                 if 'NaN' not in resp:
                     callbk(200)
+                    self._writeSerialLog('device output suppressed during operation')
                     while True:
                         try:
                             command, callbk, kwargs = self._commands.get(timeout=1)
@@ -381,8 +383,6 @@ class DeviceController(Thread):
                                 self._serial_con.write(b'STP\n')
                                 self._writeSerialLog('STP', 'C')
                                 result = self._waitFor(':')
-                                if result:
-                                    self._writeSerialLog(result, 'D')
                                 if self._waitFor('RDY'):
                                     self._writeSerialLog('RDY', 'D')
                                     callbk(200, {'res': result.replace('\n', '').replace('\r', '')})

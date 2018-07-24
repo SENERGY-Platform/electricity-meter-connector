@@ -320,6 +320,19 @@ input[type=submit]:hover {
     z-index: 6;
 }
 
+.modal-content3 {
+    position: relative;
+    background-color: #efefef;
+    margin: auto; /* 15% from the top and centered */
+    margin-top: 80px;
+    padding: 20px;
+    width: 1240px;
+    font-size: 16px;
+    -webkit-box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
+    box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
+    z-index: 6;
+}
+
 #reload_btn {
     width: 444px;
 }
@@ -346,6 +359,10 @@ input[type=submit]:hover {
 }
 
 #cal_btn {
+    width: 444px;
+}
+
+#plot_btn {
     width: 444px;
 }
 
@@ -498,6 +515,21 @@ input[type=submit]:hover {
     display: none;
 }
 
+.graph_wrapper {
+    margin-bottom: 8px;
+    background-color: white;
+    padding: 15px;
+    -webkit-box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.35);
+    display: none;
+}
+
+#graph {
+    position: relative;
+    width: 1210px;
+    height: 370px;
+}
+
 .diagram_element {
     display: inline-block;
     height: 300px;
@@ -559,6 +591,14 @@ input[type=submit]:hover {
     display: none;
 }
 
+#control_set_5 {
+    display: none;
+}
+
+#control_set_6 {
+    display: none;
+}
+
 #loader_reconnect {
     display: block;
     border: 7px solid #d6d6d6;
@@ -574,6 +614,20 @@ input[type=submit]:hover {
 }
 
 #loader_cal {
+    display: none;
+    border: 10px solid #d6d6d6;
+    border-radius: 50%;
+    border-top: 10px solid #878787;
+    width: 70px;
+    height: 70px;
+    -webkit-animation: spin 0.7s linear infinite; /* Safari */
+    animation: spin 0.7s linear infinite;
+    margin: auto;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+#loader_plot {
     display: none;
     border: 10px solid #d6d6d6;
     border-radius: 50%;

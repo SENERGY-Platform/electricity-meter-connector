@@ -5,16 +5,21 @@ let blocker;
 let settings_modal;
 let conf_modal;
 let cal_modal;
+let plot_modal;
 let mode_a_conf;
 let mode_i_conf;
 let loader;
 let boundary_wrapper;
 let diagram_wrapper;
+let graph_wrapper;
+let graph_box;
 let help_wrapper;
 let controls_1;
 let controls_2;
 let controls_3;
 let controls_4;
+let controls_5;
+let controls_6;
 let astrt;
 let current_device;
 let current_ws;
@@ -26,6 +31,7 @@ let hst_form;
 let cal_form;
 let disconnected_modal;
 let loader_cal;
+let loader_plot;
 
 function httpPost(uri, header, body) {
     if (uri) {
@@ -107,15 +113,21 @@ window.addEventListener("DOMContentLoaded", function (e) {
     settings_modal = document.getElementById('settings_modal');
     conf_modal = document.getElementById('conf_modal');
     cal_modal = document.getElementById('cal_modal');
+    plot_modal = document.getElementById('plot_modal');
     mode_a_conf = document.getElementById("mode_a");
     mode_i_conf = document.getElementById("mode_i");
     loader = document.getElementById("loader");
     loader_cal = document.getElementById("loader_cal");
+    loader_plot = document.getElementById("loader_plot");
     controls_1 = document.getElementById("control_set_1");
     controls_2 = document.getElementById("control_set_2");
     controls_3 = document.getElementById("control_set_3");
     controls_4 = document.getElementById("control_set_4");
+    controls_5 = document.getElementById("control_set_5");
+    controls_6 = document.getElementById("control_set_6");
     diagram_wrapper = document.getElementsByClassName('diagram_wrapper')[0];
+    graph_wrapper = document.getElementsByClassName('graph_wrapper')[0];
+    graph_box = document.getElementById("graph");
     help_wrapper = document.getElementsByClassName('help_wrapper')[0];
     boundary_wrapper = document.getElementsByClassName('boundary_wrapper')[0];
     astrt = document.getElementById("astrt");
@@ -398,6 +410,52 @@ async function toggleCalModal(stp=true) {
         if (stp) {
             await awaitRequest('POST', 'devices/' + current_device + "/stp");
         }
+    }
+}
+
+async function togglePlotModal(stp=true) {
+    if (plot_modal.style.display === "none" || plot_modal.style.display === "") {
+        conf_modal.style.display = "none";
+        controls_5.style.display = "block";
+        plot_modal.style.display = "block";
+        let res = await awaitRequest('POST', 'devices/' + current_device + "/pr");
+        if (res.status === 200) {
+            loader_plot.style.display = "block";
+            help_wrapper.innerHTML = "Collecting data.<br><br>Please wait for at least one full rotation before clicking 'Next'.";
+            controls_5.style.display = "block";
+        } else {
+            help_wrapper.innerHTML = "Unable to start calibration. Device busy?";
+        }
+    } else {
+        graph_wrapper.style.display = "none";
+        controls_5.style.display = "none";
+        controls_6.style.display = "none";
+        plot_modal.style.display = "none";
+        conf_modal.style.display = "block";
+        if (stp) {
+            await awaitRequest('POST', 'devices/' + current_device + "/stp");
+        }
+    }
+}
+
+async function plotReadings() {
+    let res = await awaitRequest('POST', 'devices/' + current_device + "/stp");
+    if (res.status === 200) {
+        loader_plot.style.display = "none";
+        controls_5.style.display = "none";
+        graph_wrapper.style.display = "block";
+        let data = JSON.parse(res.response)['res'];
+        new Dygraph(
+                graph_box,
+                data,
+                {
+                    ylabel: 'Value',
+                    xlabel: 'Reading',
+                    labels: [ "Reading", "Value" ]
+                }
+            );
+        help_wrapper.innerHTML = "Look for large dips to determine the correct interval.";
+        controls_6.style.display = "block";
     }
 }
 

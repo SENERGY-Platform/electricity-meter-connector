@@ -6,6 +6,8 @@
 	<meta name="keywords" content="" />
 	<meta name="description" content="" />
 	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css')|autoversion }}">
+	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='dygraph.css')|autoversion }}">
+	<script src="{{ url_for('static', filename='dygraph.min.js')|autoversion }}"></script>
 	<script src="{{ url_for('static', filename='gui.js')|autoversion }}"></script>
 </head>
 
@@ -44,7 +46,8 @@
 					<label for="lld">Delta: </label><input id="lld" type="number" min="0" max="30000" required><br><br>
 				</div>
 				<div id="mode_i">
-					<button id="cal_btn" class="btn" type="button" onclick="toggleCalModal();">Calibrate Sensor</button><br><br>
+					<!-- <button id="cal_btn" class="btn" type="button" onclick="toggleCalModal();">Calibrate Sensor</button><br><br> -->
+					<button id="plot_btn" class="btn" type="button" onclick="togglePlotModal();">Visualize Disk</button><br><br>
 					<label for="lb">Left Boundary: </label><input id="lb" type="number" min="0" max="100000" required><br><br>
 					<label for="rb">Right Boundary: </label><input id="rb" type="number" min="0" max="100000" required><br><br>
 				</div>
@@ -53,6 +56,25 @@
 				<input type="submit" value="Save"><button class="btn" type="button" onclick="toggleConfModal();">Cancel</button>
 				<input type="hidden" id="prev_conf">
 			</form>
+		</div>
+	</div>
+
+	<div id="plot_modal" class="modal">
+		<div class="modal-content3">
+			<div id="loader_plot"></div>
+			<div class="graph_wrapper">
+				<div id="graph"></div>
+			</div>
+			<div class="help_wrapper"></div>
+			<div class="control_wrapper">
+				<div id="control_set_5">
+					<button class="btn" type="button" onclick="plotReadings();">Next</button>
+					<button class="btn" type="button" onclick="togglePlotModal();">Cancel</button>
+				</div>
+				<div id="control_set_6">
+					<button class="btn" type="button" onclick="togglePlotModal(false);">Finish</button>
+				</div>
+			</div>
 		</div>
 	</div>
 
