@@ -293,16 +293,25 @@ class DeviceController(Thread):
             self._serial_con.write(b'NDMR\n')
             self._writeSerialLog('NDMR', 'C')
             callbk(200)
+            data = list()
+            count = 1
             while True:
                 msg = self._serial_con.readline()
                 if msg:
-                    self._writeSerialLog(msg, 'D')
+                    msg = msg.decode()
+                    data.append('{},{}'.format(count, msg.replace('\n', '').replace('\r', '')))
+                    count += 1
                 try:
                     command, callbk, kwargs = self._commands.get_nowait()
                     if command == self._stopAction:
-                        if self._stopAction(callbk):
+                        self._serial_con.write(b'STP\n')
+                        self._writeSerialLog('STP', 'C')
+                        if self._waitFor('RDY'):
+                            self._writeSerialLog('RDY', 'D')
+                            callbk(200, {'res': data})
                             return True
                         else:
+                            callbk(500)
                             break
                     else:
                         callbk(409)
