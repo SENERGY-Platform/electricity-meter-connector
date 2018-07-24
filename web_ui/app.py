@@ -112,6 +112,20 @@ class WebUI(Thread):
         return Response(status=500)
 
     @staticmethod
+    @app.route('/devices/<d_id>/pr', methods=['POST'])
+    def plotReadings(d_id):
+        try:
+            controller = SerialManager.getController(d_id)
+            if controller:
+                event = DeviceEvent()
+                controller.plotReadings(functools.partial(__class__.callbk, event))
+                event.wait(timeout=15)
+                return Response(status=event.status, response=json.dumps(event.message))
+        except Exception as ex:
+            logger.error(ex)
+        return Response(status=500)
+
+    @staticmethod
     @app.route('/devices/<d_id>/dbg', methods=['POST'])
     def startDebug(d_id):
         try:

@@ -118,6 +118,7 @@ class DeviceController(Thread):
         if self._waitFor('RDY'):
             self._writeSerialLog('RDY', 'D')
             logger.info("started serial controller for device '{}'".format(self._id))
+            logger.debug(self._serial_con)
             if self._configureDevice(init=True):
                 try:
                     Client.add(self._device)
@@ -263,6 +264,35 @@ class DeviceController(Thread):
         try:
             self._serial_con.write(b'MR\n')
             self._writeSerialLog('MR', 'C')
+            callbk(200)
+            while True:
+                msg = self._serial_con.readline()
+                if msg:
+                    self._writeSerialLog(msg, 'D')
+                try:
+                    command, callbk, kwargs = self._commands.get_nowait()
+                    if command == self._stopAction:
+                        if self._stopAction(callbk):
+                            return True
+                        else:
+                            break
+                    else:
+                        callbk(409)
+                        self._writeSerialLog('busy - operation not possible')
+                except Empty:
+                    pass
+        except (SerialException, SerialTimeoutException) as ex:
+            logger.error(ex)
+            callbk(500)
+        raise __class__.Interrupt
+
+    def plotReadings(self, callbk):
+        self._commands.put((self._plotReadings, callbk, None))
+
+    def _plotReadings(self, callbk):
+        try:
+            self._serial_con.write(b'NDMR\n')
+            self._writeSerialLog('NDMR', 'C')
             callbk(200)
             while True:
                 msg = self._serial_con.readline()
