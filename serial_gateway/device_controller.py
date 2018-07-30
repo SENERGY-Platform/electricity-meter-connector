@@ -10,7 +10,7 @@ from serial import SerialException, SerialTimeoutException
 from threading import Thread
 from queue import Queue, Empty
 from enum import Enum
-import logging, os, inspect
+import logging, os, inspect, json
 
 
 logger = root_logger.getChild(__name__)
@@ -223,6 +223,19 @@ class DeviceController(Thread):
         devices_db.updateDevice(self._id, kwh=str(kwh))
         self._kwh = self._kwh + kwh
 
+    def _savePlotData(self, data):
+        try:
+            with open(os.path.join(os.path.dirname(__file__), '{}/{}.plot'.format(devices_path, self._id)), 'w') as file:
+                file.write(json.dumps(data))
+        except Exception as ex:
+            logger.error("storing plot data for '{}' failed - {}".format(self._id, ex))
+
+    def getPlotData(self):
+        try:
+            with open(os.path.join(os.path.dirname(__file__), '{}/{}.plot'.format(devices_path, self._id)), 'r') as file:
+                return json.loads(file.read())
+        except Exception as ex:
+            logger.error("loading plot data for '{}' failed - {}".format(self._id, ex))
 
     #---------- commands ----------#
 
@@ -310,6 +323,7 @@ class DeviceController(Thread):
                             self._writeSerialLog('RDY', 'D')
                             for x in range(len(data)):
                                 data[x][1] = int(data[x][1].decode().replace('\n', '').replace('\r', ''))
+                            self._savePlotData(data)
                             callbk(200, {'res': data})
                             return True
                         else:
