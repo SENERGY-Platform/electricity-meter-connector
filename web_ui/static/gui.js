@@ -450,6 +450,7 @@ async function togglePlotModal(stp=true) {
         controls_6.style.display = "none";
         plot_modal.style.display = "none";
         conf_modal.style.display = "block";
+        help_wrapper.innerHTML = "";
         if (stp) {
             await awaitRequest('POST', 'devices/' + current_device + "/stp");
         }
@@ -458,6 +459,9 @@ async function togglePlotModal(stp=true) {
 
 async function collectReadings() {
     graph_wrapper.style.display = "none";
+    controls_5.style.display = "none";
+    controls_6.style.display = "none";
+    help_wrapper.innerHTML = "";
     loader_plot.style.display = "block";
     let res = await awaitRequest('POST', 'devices/' + current_device + "/pr");
     if (res.status === 200) {
