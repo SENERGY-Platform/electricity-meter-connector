@@ -416,15 +416,31 @@ async function toggleCalModal(stp=true) {
 async function togglePlotModal(stp=true) {
     if (plot_modal.style.display === "none" || plot_modal.style.display === "") {
         conf_modal.style.display = "none";
-        controls_5.style.display = "block";
         plot_modal.style.display = "block";
-        let res = await awaitRequest('POST', 'devices/' + current_device + "/pr");
-        if (res.status === 200) {
-            loader_plot.style.display = "block";
-            help_wrapper.innerHTML = "Collecting data.<br><br>Please wait for at least one full rotation before clicking 'Next'.";
+        let old_plot = await awaitRequest('GET', 'devices/' + current_device + "/gp");
+        if (old_plot.status === 200) {
+            graph_wrapper.style.display = "block";
+            let data = JSON.parse(old_plot.response)['res'];
+            new Dygraph(
+                    graph_box,
+                    data,
+                    {
+                        ylabel: 'Value',
+                        xlabel: 'Reading',
+                        labels: [ "Reading", "Value" ]
+                    }
+                );
+            help_wrapper.innerHTML = "Look for large dips to determine the correct interval.";
             controls_5.style.display = "block";
         } else {
-            help_wrapper.innerHTML = "Unable to start calibration. Device busy?";
+            let res = await awaitRequest('POST', 'devices/' + current_device + "/pr");
+            if (res.status === 200) {
+                loader_plot.style.display = "block";
+                help_wrapper.innerHTML = "Collecting data.<br><br>Please wait for at least one full rotation before clicking 'Next'.";
+                controls_6.style.display = "block";
+            } else {
+                help_wrapper.innerHTML = "Unable to start calibration. Device busy?";
+            }
         }
     } else {
         graph_wrapper.style.display = "none";
@@ -438,11 +454,24 @@ async function togglePlotModal(stp=true) {
     }
 }
 
+async function collectReadings() {
+    let res = await awaitRequest('POST', 'devices/' + current_device + "/pr");
+    if (res.status === 200) {
+        graph_wrapper.style.display = "none";
+        loader_plot.style.display = "block";
+        help_wrapper.innerHTML = "Collecting data.<br><br>Please wait for at least one full rotation before clicking 'Next'.";
+        controls_5.style.display = "none";
+        controls_6.style.display = "block";
+    } else {
+        help_wrapper.innerHTML = "Unable to start calibration. Device busy?";
+    }
+}
+
 async function plotReadings() {
     let res = await awaitRequest('POST', 'devices/' + current_device + "/stp");
     if (res.status === 200) {
         loader_plot.style.display = "none";
-        controls_5.style.display = "none";
+        controls_6.style.display = "none";
         graph_wrapper.style.display = "block";
         let data = JSON.parse(res.response)['res'];
         new Dygraph(
@@ -455,7 +484,7 @@ async function plotReadings() {
                 }
             );
         help_wrapper.innerHTML = "Look for large dips to determine the correct interval.";
-        controls_6.style.display = "block";
+        controls_5.style.display = "block";
     }
 }
 
