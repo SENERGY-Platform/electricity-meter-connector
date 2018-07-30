@@ -220,7 +220,7 @@ class DeviceController(Thread):
             self._strt = int(state)
 
     def _calcAndWriteTotal(self, kwh):
-        devices_db.updateDevice(self._id, kwh=str(self._kwh))
+        devices_db.updateDevice(self._id, kwh=str(kwh))
         self._kwh = self._kwh + kwh
 
 
