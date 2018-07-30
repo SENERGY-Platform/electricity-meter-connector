@@ -433,13 +433,15 @@ async function togglePlotModal(stp=true) {
             help_wrapper.innerHTML = "Look for large dips to determine the correct interval.";
             controls_5.style.display = "block";
         } else {
+            loader_plot.style.display = "block";
             let res = await awaitRequest('POST', 'devices/' + current_device + "/pr");
             if (res.status === 200) {
-                loader_plot.style.display = "block";
                 help_wrapper.innerHTML = "Collecting data.<br><br>Please wait for at least one full rotation before clicking 'Next'.";
                 controls_6.style.display = "block";
             } else {
+                loader_plot.style.display = "none";
                 help_wrapper.innerHTML = "Unable to start calibration. Device busy?";
+                controls_5.style.display = "block";
             }
         }
     } else {
@@ -455,15 +457,17 @@ async function togglePlotModal(stp=true) {
 }
 
 async function collectReadings() {
+    graph_wrapper.style.display = "none";
+    loader_plot.style.display = "block";
     let res = await awaitRequest('POST', 'devices/' + current_device + "/pr");
     if (res.status === 200) {
-        graph_wrapper.style.display = "none";
-        loader_plot.style.display = "block";
         help_wrapper.innerHTML = "Collecting data.<br><br>Please wait for at least one full rotation before clicking 'Next'.";
         controls_5.style.display = "none";
         controls_6.style.display = "block";
     } else {
+        loader_plot.style.display = "none";
         help_wrapper.innerHTML = "Unable to start calibration. Device busy?";
+        controls_5.style.display = "block";
     }
 }
 
