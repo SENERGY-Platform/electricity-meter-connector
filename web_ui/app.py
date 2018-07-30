@@ -126,6 +126,20 @@ class WebUI(Thread):
         return Response(status=500)
 
     @staticmethod
+    @app.route('/devices/<d_id>/gp', methods=['GET'])
+    def getPlot(d_id):
+        try:
+            controller = SerialManager.getController(d_id)
+            if controller:
+                data = controller.getPlotData()
+                if data:
+                    return Response(status=200, response=json.dumps({'res': data}))
+                return Response(status=404)
+        except Exception as ex:
+            logger.error(ex)
+        return Response(status=500)
+
+    @staticmethod
     @app.route('/devices/<d_id>/dbg', methods=['POST'])
     def startDebug(d_id):
         try:
