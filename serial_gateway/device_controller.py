@@ -250,16 +250,18 @@ class DeviceController(Thread):
                 conf = '{}:{}:{}:{}:{}\n'.format(self._mode.value, self._conf[self._mode]['conf_a'], self._conf[self._mode]['conf_b'], self._dt, self._ndt)
                 self._serial_con.write(conf.encode())
                 self._writeSerialLog(conf, 'C')
-                resp = self._waitFor(':')
-                self._writeSerialLog(resp, 'D')
-                if self._waitFor('RDY'):
-                    self._writeSerialLog('RDY', 'D')
-                    logger.info("configured device {}".format(self._id))
-                    if callbk:
-                        callbk(200)
-                    return True
+                if self._waitFor(conf.replace('\n', '')):
+                    self._writeSerialLog(conf, 'D')
+                    if self._waitFor('RDY'):
+                        self._writeSerialLog('RDY', 'D')
+                        logger.info("configured device {}".format(self._id))
+                        if callbk:
+                            callbk(200)
+                        return True
+                    else:
+                        logger.error("device '{}' not ready".format(self._id))
                 else:
-                    logger.error("device '{}' not ready".format(self._id))
+                    logger.error("device '{}' could not be configured".format(self._id))
             else:
                 logger.error("device '{}' did not enter configuration mode".format(self._id))
         except (SerialException, SerialTimeoutException, ValueError) as ex:
