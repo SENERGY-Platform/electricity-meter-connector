@@ -15,9 +15,9 @@
 """
 
 try:
-    from connector_client.client import Client
-    from connector_client.device import Device
-    from connector_client.modules.device_pool import DevicePool
+    from connector_lib.client import Client
+    from connector_lib.device import Device
+    from connector_lib.modules.device_pool import DevicePool
     from serial_gateway.devices_db import DevicesDatabase
     from serial_gateway.logger import root_logger
 except ImportError as ex:

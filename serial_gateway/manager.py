@@ -15,7 +15,7 @@
 """
 
 try:
-    from connector_client.modules.singleton import SimpleSingleton
+    from connector_lib.modules.singleton import SimpleSingleton
     from serial_gateway.device_controller import DeviceController
     from serial_gateway.devices_db import DevicesDatabase
     from serial_gateway.logger import root_logger

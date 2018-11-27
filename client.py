@@ -15,8 +15,8 @@
 """
 
 try:
-    from connector_client.client import Client
-    from connector_client.modules.device_pool import DevicePool
+    from connector_lib.client import Client
+    from connector_lib.modules.device_pool import DevicePool
     from serial_gateway.manager import SerialManager
     from serial_gateway.logger import root_logger
     from web_ui.ws_console import WebsocketConsole

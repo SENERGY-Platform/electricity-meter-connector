@@ -18,8 +18,8 @@ try:
     from flask import Flask, render_template, Response, request
     from serial_gateway.manager import SerialManager
     from web_ui.ws_console import WebsocketConsole
-    from serial_gateway.logger import root_logger, connector_client_log_handler
-    from connector_client.configuration import VERSION
+    from serial_gateway.logger import root_logger, connector_lib_log_handler
+    from connector_lib.configuration import VERSION
 except ImportError as ex:
     exit("{} - {}".format(__name__, ex.msg))
 from threading import Thread, Event
@@ -28,7 +28,7 @@ import logging, time, functools, json
 
 logger = root_logger.getChild(__name__)
 werkzeug_logger = logging.getLogger('werkzeug')
-werkzeug_logger.addHandler(connector_client_log_handler)
+werkzeug_logger.addHandler(connector_lib_log_handler)
 werkzeug_logger.setLevel(logging.WARNING)
 
 
