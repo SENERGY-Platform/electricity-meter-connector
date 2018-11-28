@@ -1,4 +1,4 @@
-client-connector-lib,4.0.0
-websockets,6.0
+client-connector-lib,4.0.2
+websockets,7.0
 pyserial,3.4
 Flask,1.0.2
